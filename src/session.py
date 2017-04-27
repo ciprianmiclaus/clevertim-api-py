@@ -14,6 +14,8 @@ class SessionError(Exception):
 class Session(object):
 
 	ENDPOINT_URL = 'https://www.clevertim.com/api'
+	
+	ENDPOINT_FACTORY = {}
 
 	def __init__(self, api_key, endpoint_url=None, enable_caching=True):
 		assert api_key, "Empty API key"
@@ -23,7 +25,16 @@ class Session(object):
 		self.enable_caching = enable_caching
 		# used to cache GET requests
 		self.session_cache = {}
+		self.instance_cache = {}
 
+	@classmethod
+	def register_endpoint(cls, endpoint_cls):
+		cls.ENDPOINT_FACTORY[endpoint_cls.__name__] = endpoint_cls
+
+	@classmethod
+	def enpoint_name_to_cls(cls, endpoint_name):
+		return cls.ENDPOINT_FACTORY[endpoint_name]
+		
 	def _get_url(self, endpoint, resource_id=None):
 		url = self.endpoint_url
 		if not endpoint.startswith('/'):
@@ -61,10 +72,10 @@ class Session(object):
 			r = requests.get(url, headers = headers)
 		elif method == "POST":
 			log.debug("POST %s %s", url, payload)
-			r = requests.post(url, headers = headers, data = payload)
+			r = requests.post(url, headers = headers, data = json.dumps(payload, separators=(',', ':')))
 		elif method == "PUT":
 			log.debug("PUT %s %s", url, payload)
-			r = requests.put(url, headers = headers, data = payload)
+			r = requests.put(url, headers = headers, data = json.dumps(payload, separators=(',', ':')))
 		elif method == "DELETE":
 			log.debug("DELETE %s", url)
 			r = requests.delete(url, headers = headers)
@@ -88,3 +99,12 @@ class Session(object):
 				del self.session_cache[cache_key]
 
 		return result
+		
+	def get(self, endpoint_name, key, lazy_load=False):
+		cache_key = '%s%s' % (endpoint_name, key)
+		instance = self.instance_cache.get(cache_key)
+		if instance is None:
+			cls = self.ENDPOINT_FACTORY[endpoint_name]
+			instance = cls(self, key=key, lazy_load=lazy_load)
+			self.instance_cache[cache_key] = instance
+		return instance
