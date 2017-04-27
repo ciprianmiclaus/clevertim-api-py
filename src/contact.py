@@ -21,7 +21,6 @@ class Contact(Endpoint):
 	title = make_single_elem_property('title', basestring, '', 'Contact\'s title')
 
 	company_key = make_single_elem_property('companyId', int, None, 'Contact\'s company key')
-	company = make_single_elem_ref_property('companyId', int, )
 
 	address = make_single_elem_property('title', basestring, '', 'Contact\'s address')
 	city = make_single_elem_property('city', basestring, '', 'Contact\'s city')
