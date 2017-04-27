@@ -15,11 +15,14 @@ class Session(object):
 
 	ENDPOINT_URL = 'https://www.clevertim.com/api'
 
-	def __init__(self, api_key, endpoint_url=None):
+	def __init__(self, api_key, endpoint_url=None, enable_caching=True):
 		assert api_key, "Empty API key"
 		self.api_key = api_key
 		endpoint_url = endpoint_url or self.ENDPOINT_URL
 		self.endpoint_url = endpoint_url.rstrip('/')
+		self.enable_caching = enable_caching
+		# used to cache GET requests
+		self.session_cache = {}
 
 	def _get_url(self, endpoint, resource_id=None):
 		url = self.endpoint_url
@@ -30,7 +33,10 @@ class Session(object):
 			url += '/' + str(resource_id)
 		return url
 
-	def make_request(self, endpoint, resource_id=None, method='GET', payload=None):
+	def _get_cache_key(self, endpoint, resource_id):
+		return '%s%s' % (endpoint, resource_id)
+
+	def make_request(self, endpoint, resource_id=None, method='GET', payload=None, reload=False):
 		assert endpoint, "Empty endpoint"
 
 		auth_token = base64.standard_b64encode(self.api_key + ':X')
@@ -42,7 +48,15 @@ class Session(object):
 
 		url = self._get_url(endpoint, resource_id=resource_id)
 
+		cache_key = None
 		if method == "GET":
+			if self.enable_caching:
+				cache_key = self._get_cache_key(endpoint, resource_id)
+				if not reload:
+					ret = self.session_cache.get(cache_key)
+					if ret:
+						log.debug("cache hit on GET %s", url)
+						return ret
 			log.debug("GET %s", url)
 			r = requests.get(url, headers = headers)
 		elif method == "POST":
@@ -64,5 +78,13 @@ class Session(object):
 			raise SessionError("HTTP %s - %s" % (status_code, response))
 
 		log.debug("Response %s %s", r.status_code, response)
-		if response:
-			return json.loads(response)
+		result = response and json.loads(response) or None
+
+		# update the cache
+		if cache_key:
+			if result is not None:
+				self.session_cache[cache_key] = result
+			elif cache_key in self.session_cache:
+				del self.session_cache[cache_key]
+
+		return result
