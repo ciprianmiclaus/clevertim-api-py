@@ -107,7 +107,7 @@ class Endpoint(object):
 		self._key = None
 
 	def is_new(self):
-		return bool(self._key)
+		return not self._key
 
 	@property
 	def key(self):
@@ -121,16 +121,16 @@ class Endpoint(object):
 	@property
 	def added_on(self):
 		self._check_needs_loading()
-		return self._content['ao']
+		return self._content.get('ao')
 
 	@property
 	def last_modified(self):
 		self._check_needs_loading()
-		return self._content['lm']
+		return self._content.get('lm')
 
 	@property
 	def last_contacted(self):
 		self._check_needs_loading()
-		return self._content['lc']
+		return self._content.get('lc')
 
 

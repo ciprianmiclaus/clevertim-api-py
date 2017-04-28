@@ -157,6 +157,23 @@ class TestSession(unittest.TestCase):
 		self.assertTrue(ret is ret2)
 
 	@mock.patch('requests.get')
+	def test_caching_enabled_2nd_get_with_reload_hits_server(self, mockRequestsGET):
+		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
+		response = mock.Mock()
+		response.status_code = 200
+		response.text = json.dumps(payload)
+		mockRequestsGET.return_value = response
+
+		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake', enable_caching=True)
+		ret = session.make_request(endpoint='/endpoint', resource_id=3434, method='GET')
+		self.assertIsNotNone(ret)
+		# 2nd request should hit the cache
+		ret2 = session.make_request(endpoint='/endpoint', resource_id=3434, method='GET', reload=True) 
+		self.assertEqual(mockRequestsGET.call_count, 2)
+		self.assertTrue(ret is not ret2)
+		self.assertEqual(ret, ret2)
+
+	@mock.patch('requests.get')
 	def test_caching_disabled_2nd_get_hits_server(self, mockRequestsGET):
 		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
