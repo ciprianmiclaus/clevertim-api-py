@@ -32,6 +32,10 @@ class Session(object):
 		cls.ENDPOINT_FACTORY[endpoint_cls.__name__] = endpoint_cls
 
 	@classmethod
+	def deregister_endpoint(cls, endpoint_cls):
+		del cls.ENDPOINT_FACTORY[endpoint_cls.__name__]
+
+	@classmethod
 	def enpoint_name_to_cls(cls, endpoint_name):
 		return cls.ENDPOINT_FACTORY[endpoint_name]
 		
