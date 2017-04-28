@@ -22,6 +22,7 @@ def _multi_attr_set(attr_name, list_elem_type):
 		assert isinstance(value, list) or value is None
 		assert all(isinstance(elem, list_elem_type) for elem in value)
 		self._content[attr_name] = value
+	return _set
 
 def make_single_elem_property(attr_name, elem_type, default=None, doc_string=''):
 	return property(_attr_get(attr_name, default), _single_attr_set(attr_name, elem_type), _attr_del(attr_name), doc_string)

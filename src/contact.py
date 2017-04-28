@@ -13,7 +13,7 @@ class Contact(Endpoint):
 
 	company = make_single_elem_ref_property('companyId', 'Company', 'Contact\'s company')
 
-	address = make_single_elem_property('title', basestring, '', 'Contact\'s address')
+	address = make_single_elem_property('address', basestring, '', 'Contact\'s address')
 	city = make_single_elem_property('city', basestring, '', 'Contact\'s city')
 	postcode = make_single_elem_property('postcode', basestring, '', 'Contact\'s postcode')
 

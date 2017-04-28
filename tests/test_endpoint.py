@@ -135,9 +135,54 @@ class TestEndpoint(unittest.TestCase):
 		endpoint = Endpoint(self.session, key=6789, lazy_load=False)
 		endpoint.save()
 
-		self.assertEqual(mockRequestsPUT.call_count, 1)	
-		mockRequestsPUT.assert_called_once_with(
-			Session.ENDPOINT_URL + Endpoint.ENDPOINT + '/6789',
-			headers = mock.ANY,
-			data = mock.ANY
-		)
+		self.assertEqual(mockRequestsPUT.call_count, 1)
+		session_url = mockRequestsPUT.call_args_list[0][0][0]
+		data = mockRequestsPUT.call_args_list[0][1]['data']
+		self.assertEqual(session_url, Session.ENDPOINT_URL + Endpoint.ENDPOINT + '/6789')
+		self.assertEqual(json.loads(data), self.payload['content'][0])
+
+	@mock.patch('requests.post')
+	def test_save_new_endpoint(self, mockRequestsPOST):
+		response = mock.Mock()
+		response.status_code = 200
+		response.text = json.dumps(self.payload)
+		mockRequestsPOST.return_value = response
+
+		endpoint = Endpoint(self.session)
+		self.assertTrue(endpoint.is_new())
+		endpoint.save()
+
+		self.assertEqual(mockRequestsPOST.call_count, 1)
+		session_url = mockRequestsPOST.call_args_list[0][0][0]
+		data = mockRequestsPOST.call_args_list[0][1]['data']
+		self.assertEqual(session_url, Session.ENDPOINT_URL + Endpoint.ENDPOINT)
+		self.assertEqual(json.loads(data), {})
+
+		self.assertFalse(endpoint.is_new())
+		self.assertEqual(endpoint.key, 6789)
+
+	@mock.patch('requests.delete')
+	def test_delete_unlazy_loaded_endpoint(self, mockRequestsDELETE):
+		response = mock.Mock()
+		response.status_code = 200
+		response.text = json.dumps(self.payload)
+		mockRequestsDELETE.return_value = response
+		
+		endpoint = Endpoint(self.session, key=6789, lazy_load=False)
+		endpoint.delete()
+
+		mockRequestsDELETE.assert_called_once_with(Session.ENDPOINT_URL + Endpoint.ENDPOINT + '/6789', headers=mock.ANY)
+		self.assertEqual(self.mockRequestsGET.call_count, 1)
+
+	@mock.patch('requests.delete')
+	def test_delete_lazy_loaded_endpoint(self, mockRequestsDELETE):
+		response = mock.Mock()
+		response.status_code = 200
+		response.text = json.dumps(self.payload)
+		mockRequestsDELETE.return_value = response
+		
+		endpoint = Endpoint(self.session, key=6789, lazy_load=True)
+		endpoint.delete()
+
+		mockRequestsDELETE.assert_called_once_with(Session.ENDPOINT_URL + Endpoint.ENDPOINT + '/6789', headers=mock.ANY)
+		self.assertEqual(self.mockRequestsGET.call_count, 0)
