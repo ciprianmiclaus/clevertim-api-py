@@ -1,9 +1,10 @@
 import json
 import mock
-import unittest
-
-#import sys
-#sys.path.append('../src')
+import sys
+if sys.version_info[:2] < (2, 7):
+	import unittest2 as unittest
+else:
+	import unittest
 
 import clevertimapi
 from clevertimapi.endpoint import Endpoint

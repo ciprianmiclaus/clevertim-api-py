@@ -8,7 +8,7 @@ with open(os.path.join(current_dir, 'README.md'), 'rb') as f:
 
 requires_list = ['requests']
 	
-if sys.version_info <= (2, 6):
+if sys.version_info[:2] < (2, 7):
 	import unittest2 as unittest
 	requires_list.append('unittest2')
 else:
