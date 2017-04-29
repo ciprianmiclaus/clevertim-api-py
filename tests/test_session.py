@@ -2,10 +2,7 @@ import json
 import mock
 import unittest
 
-import sys
-sys.path.append('../src')
-
-from session import Session, SessionError
+from clevertimapi.session import Session, SessionError
 
 
 class FakeEndpoint(object):

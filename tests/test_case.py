@@ -3,12 +3,9 @@ import json
 import mock
 import unittest
 
-import sys
-sys.path.append('../src')
-
-from session import Session
-from case import Case
-from task import Task
+from clevertimapi.session import Session
+from clevertimapi.case import Case
+from clevertimapi.task import Task
 
 
 class TestCase(unittest.TestCase):

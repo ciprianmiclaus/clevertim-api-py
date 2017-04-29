@@ -2,11 +2,12 @@ import json
 import mock
 import unittest
 
-import sys
-sys.path.append('../src')
+#import sys
+#sys.path.append('../src')
 
-from endpoint import Endpoint
-from session import Session
+import clevertimapi
+from clevertimapi.endpoint import Endpoint
+from clevertimapi.session import Session
 
 
 class TestEndpoint(unittest.TestCase):

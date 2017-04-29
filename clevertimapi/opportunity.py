@@ -1,4 +1,4 @@
-from endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property
+from endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property, make_single_elem_ref_property
 from session import Session
 
 
