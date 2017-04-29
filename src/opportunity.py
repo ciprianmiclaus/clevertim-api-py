@@ -12,5 +12,7 @@ class Opportunity(Endpoint):
 
 	tasks = make_multi_elem_ref_property('tasks', 'Task', 'List of tasks for this oppotunity')
 
+	notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this opportunity')
+
 
 Session.register_endpoint(Opportunity)

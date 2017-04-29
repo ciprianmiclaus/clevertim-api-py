@@ -16,6 +16,8 @@ class Company(Endpoint):
 	address = make_single_elem_property('address', basestring, '', 'Company\'s address')
 	city = make_single_elem_property('city', basestring, '', 'Company\'s city')
 	postcode = make_single_elem_property('postcode', basestring, '', 'Company\'s postcode')
+	region = make_single_elem_property('region', basestring, '', 'Contact\'s region/district/state code')
+	country = make_single_elem_property('country', basestring, '', 'Contact\'s country code')
 
 	description = make_single_elem_property('description', basestring, '', 'Some text about this company')
 
@@ -27,6 +29,8 @@ class Company(Endpoint):
 	tasks = make_multi_elem_ref_property('tasks', 'Task', 'List of tasks for this company')
 	opportunities = make_multi_elem_ref_property('opportunities', 'Opportunity', 'List of opportunities for this company')
 	cases = make_multi_elem_ref_property('cases', 'Case', 'List of cases for this company')
+
+	notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this company')
 
 
 Session.register_endpoint(Company)

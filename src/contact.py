@@ -20,6 +20,8 @@ class Contact(Endpoint):
 	address = make_single_elem_property('address', basestring, '', 'Contact\'s address')
 	city = make_single_elem_property('city', basestring, '', 'Contact\'s city')
 	postcode = make_single_elem_property('postcode', basestring, '', 'Contact\'s postcode')
+	region = make_single_elem_property('region', basestring, '', 'Contact\'s region/district/state code')
+	country = make_single_elem_property('country', basestring, '', 'Contact\'s country code')
 
 	description = make_single_elem_property('description', basestring, '', 'Some text about this contact')
 
@@ -31,6 +33,11 @@ class Contact(Endpoint):
 	tasks = make_multi_elem_ref_property('tasks', 'Task', 'List of tasks for this contact')
 	opportunities = make_multi_elem_ref_property('opportunities', 'Opportunity', 'List of opportunities for this contact')
 	cases = make_multi_elem_ref_property('cases', 'Case', 'List of cases for this contact')
+
+	notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this contact')
+
+	#TODO:
+	# phones, smids, files, lfiles, puser, gid, cphoto, cf
 
 
 Session.register_endpoint(Contact)

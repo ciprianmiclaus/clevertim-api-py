@@ -7,45 +7,52 @@ import sys
 sys.path.append('../src')
 
 from session import Session
+from contact import Contact
 from company import Company
 from task import Task
 from opportunity import Opportunity
 from case import Case
 
 
-class TestCompany(unittest.TestCase):
+class TestContact(unittest.TestCase):
 
 	def setUp(self):
 		self.maxDiff = None
 		self.session = Session('API_KEY')
 
-		self.company1 = {
-			'cn': 'Clevertim Ltd.',
-			'is_company': True,
+		self.contact1 = {
+			'fn': 'Mike',
+			'ln': 'Doodley',
+			'title': 'Engineer',
+			'is_company': False,
+			'companyId': 999,
 			'address': '199 Maverick Road',
 			'city': 'London',
 			'postcode': 'SW19 7BH',
 			'region': 'US-FL',
 			'country': 'US',
-			'description': 'Clevertim is a great company. They do software.',
-			'email': ['sales@gmail.com', 'support@yahoo.com'],
-			'website': ['http://www.clevertim.com', 'http://www.clevertim.org'],
+			'description': 'Mike is a great, likeable guy. He always returns my calls.',
+			'email': ['mike.doodley@gmail.com', 'mike.doodley@yahoo.com'],
+			'website': ['http://www.google.com', 'http://www.mikedoodley.com'],
 			'tags': ['tag1', 'tag2', 'tag3'],
 			'tasks': [1, 2],
 			'opportunities': [100, 101, 211],
 			'cases': [55, 57]
 		}
-		self.company2 = {
+		self.contact2 = {
 			'id': 445,
-			'cn': 'Some Ltd.',
-			'is_company': True,
+			'fn': 'John',
+			'ln': 'Rowdy',
+			'title': 'CEO',
+			'is_company': False,
+			'companyId': 456,
 			'address': '32 Bossy Lane',
 			'city': 'Winchester',
 			'postcode': 'WH7 8AB',
 			'region': 'GB-WRL',
 			'country': 'GB',
-			'description': 'Some Ltd. is fantastic. Its customer support is unlike anything out there.',
-			'email': ['support@someltd.com', 'some.ltd@yahoo.com'],
+			'description': 'John is very bossy. He even lives on a bossy lane.',
+			'email': ['john.rowdy@gmail.com', 'john.rowdy@yahoo.com'],
 			'website': ['http://www.johnrowdy.com', 'http://www.yahoo.com'],
 			'tags': ['othertag1', 'othertag2', 'othertag3'],
 			'tasks': [3, 4, 2],
@@ -54,8 +61,8 @@ class TestCompany(unittest.TestCase):
 		}
 
 	@mock.patch('requests.get')
-	def test_load_company(self, mockRequestsGET):
-		c1 = deepcopy(self.company1)
+	def test_load_contact(self, mockRequestsGET):
+		c1 = deepcopy(self.contact1)
 		c1['id'] = 445
 
 		response = mock.Mock()
@@ -68,19 +75,24 @@ class TestCompany(unittest.TestCase):
 		})
 		mockRequestsGET.return_value = response
 
-		c = Company(self.session, key=445)
+		c = Contact(self.session, key=445)
 		self.assertFalse(c.is_new())
 		self.assertEqual(c.key, 445)
-		self.assertEqual(c.name, 'Clevertim Ltd.')
+		self.assertEqual(c.first_name, 'Mike')
+		self.assertEqual(c.last_name, 'Doodley')
+		self.assertEqual(c.title, 'Engineer')
 		self.assertEqual(c.address, '199 Maverick Road')
 		self.assertEqual(c.city, 'London')
 		self.assertEqual(c.postcode, 'SW19 7BH')
 		self.assertEqual(c.region, 'US-FL')
 		self.assertEqual(c.country, 'US')
-		self.assertEqual(c.description, 'Clevertim is a great company. They do software.',)
-		self.assertEqual(c.emails, ['sales@gmail.com', 'support@yahoo.com'])
-		self.assertEqual(c.websites, ['http://www.clevertim.com', 'http://www.clevertim.org'])
+		self.assertEqual(c.description, 'Mike is a great, likeable guy. He always returns my calls.')
+		self.assertEqual(c.emails, ['mike.doodley@gmail.com', 'mike.doodley@yahoo.com'])
+		self.assertEqual(c.websites, ['http://www.google.com', 'http://www.mikedoodley.com'])
 		self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
+
+		self.assertIsInstance(c.company, Company)
+		self.assertEqual(c.company.key, 999)
 
 		self.assertTrue(all(isinstance(t, Task) for t in c.tasks))
 		self.assertEqual([t.key for t in c.tasks], [1, 2])
@@ -90,7 +102,7 @@ class TestCompany(unittest.TestCase):
 		self.assertEqual([t.key for t in c.cases], [55, 57])
 
 	@mock.patch('requests.post')
-	def test_add_new_company(self, mockRequestsPOST):
+	def test_add_new_contact(self, mockRequestsPOST):
 		response = mock.Mock()
 		response.status_code = 200
 		response.text = json.dumps({
@@ -103,17 +115,21 @@ class TestCompany(unittest.TestCase):
 		})
 		mockRequestsPOST.return_value = response
 	
-		c = Company(self.session)
-		c.name = 'Clevertim Ltd.'
+		c = Contact(self.session)
+		c.first_name = 'Mike'
+		c.last_name = 'Doodley'
+		c.title = 'Engineer'
 		c.address = '199 Maverick Road'
 		c.city = 'London'
 		c.postcode = 'SW19 7BH'
 		c.region = 'US-FL'
 		c.country = 'US'
-		c.description = 'Clevertim is a great company. They do software.'
-		c.emails = ['sales@gmail.com', 'support@yahoo.com']
-		c.websites = ['http://www.clevertim.com', 'http://www.clevertim.org']
+		c.description = 'Mike is a great, likeable guy. He always returns my calls.'
+		c.emails = ['mike.doodley@gmail.com', 'mike.doodley@yahoo.com']
+		c.websites = ['http://www.google.com', 'http://www.mikedoodley.com']
 		c.tags = ['tag1', 'tag2', 'tag3']
+		
+		c.company = Company(self.session, key=999, lazy_load=True)
 		
 		c.tasks = [Task(self.session, key=1, lazy_load=True), Task(self.session, key=2, lazy_load=True)]
 		c.opportunities = [Opportunity(self.session, key=100, lazy_load=True), Opportunity(self.session, key=101, lazy_load=True), Opportunity(self.session, key=211, lazy_load=True)]
@@ -128,13 +144,13 @@ class TestCompany(unittest.TestCase):
 		session_url = args[0][0]
 		data = json.loads(args[1]['data'])
 
-		self.assertEqual(session_url, Session.ENDPOINT_URL + Company.ENDPOINT)
-		self.assertEqual(data, self.company1)
+		self.assertEqual(session_url, Session.ENDPOINT_URL + Contact.ENDPOINT)
+		self.assertEqual(data, self.contact1)
 
 	@mock.patch('requests.put')
 	@mock.patch('requests.get')
-	def test_edit_existing_company(self, mockRequestsGET, mockRequestsPUT):
-		c1 = deepcopy(self.company1)
+	def test_edit_existing_contact(self, mockRequestsGET, mockRequestsPUT):
+		c1 = deepcopy(self.contact1)
 		c1['id'] = 445
 
 		response = mock.Mock()
@@ -158,15 +174,17 @@ class TestCompany(unittest.TestCase):
 		})
 		mockRequestsPUT.return_value = response
 
-		c = Company(self.session, key=445)
-		c.name = 'Some Ltd.'
+		c = Contact(self.session, key=445)
+		c.first_name = 'John'
+		c.last_name = 'Rowdy'
+		c.title = 'CEO'
 		c.address = '32 Bossy Lane'
 		c.city = 'Winchester'
 		c.postcode = 'WH7 8AB'
 		c.region = 'GB-WRL'
 		c.country = 'GB'
-		c.description = 'Some Ltd. is fantastic. Its customer support is unlike anything out there.'
-		c.emails = ['support@someltd.com', 'some.ltd@yahoo.com']
+		c.description = 'John is very bossy. He even lives on a bossy lane.'
+		c.emails = ['john.rowdy@gmail.com', 'john.rowdy@yahoo.com']
 		c.websites = ['http://www.johnrowdy.com', 'http://www.yahoo.com']
 		c.tags = ['othertag1', 'othertag2', 'othertag3']
 		
@@ -184,5 +202,5 @@ class TestCompany(unittest.TestCase):
 		session_url = args[0][0]
 		data = json.loads(args[1]['data'])
 
-		self.assertEqual(session_url, Session.ENDPOINT_URL + Company.ENDPOINT + '/445')
-		self.assertEqual(data, self.company2)
+		self.assertEqual(session_url, Session.ENDPOINT_URL + Contact.ENDPOINT + '/445')
+		self.assertEqual(data, self.contact2)

@@ -12,5 +12,7 @@ class Case(Endpoint):
 
 	tasks = make_multi_elem_ref_property('tasks', 'Task', 'List of tasks for this case')
 
+	notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this case')
+
 
 Session.register_endpoint(Case)
