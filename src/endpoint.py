@@ -47,8 +47,13 @@ def _single_ref_attr_set(attr_name, elem_ref_type):
 		self._content[attr_name] = value
 	return _set
 
-def make_single_elem_ref_property(attr_name, elem_ref_type, doc_string=''):
-	return property(_single_ref_attr_get(attr_name, elem_ref_type), _single_ref_attr_set(attr_name, elem_ref_type), _attr_del(attr_name), doc_string)
+def make_single_elem_ref_property(attr_name, elem_ref_type, doc_string='', readonly=False):
+	return property(
+		_single_ref_attr_get(attr_name, elem_ref_type),
+		None if readonly else _single_ref_attr_set(attr_name, elem_ref_type),
+		None if readonly else _attr_del(attr_name),
+		doc_string
+	)
 
 
 def _multi_ref_attr_get(attr_name, elem_ref_type):
@@ -70,6 +75,10 @@ def _multi_ref_attr_set(attr_name, elem_ref_type):
 
 def make_multi_elem_ref_property(attr_name, elem_ref_type, doc_string=''):
 	return property(_multi_ref_attr_get(attr_name, elem_ref_type), _multi_ref_attr_set(attr_name, elem_ref_type), _attr_del(attr_name), doc_string)
+
+def make_single_readonly_property(attr_name, default=None, doc_string=''):
+	return property(_attr_get(attr_name, default=default), None, None, doc_string)
+	
 	
 
 class Endpoint(object):
@@ -120,6 +129,8 @@ class Endpoint(object):
 	def is_private(self):
 		self._check_needs_loading()
 		return self._content.get('is_private', False)
+
+	private_to = make_single_elem_ref_property('puser', 'User', 'The user this item is private to.', readonly=True)
 
 	@property
 	def added_on(self):

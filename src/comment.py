@@ -12,4 +12,4 @@ class Comment(Endpoint):
 	task = make_multi_elem_ref_property('tid', 'Task', 'The task this comment is attached to or None if not attached to a task')
 
 
-Session.register_endpoint(Note)
+Session.register_endpoint(Comment)

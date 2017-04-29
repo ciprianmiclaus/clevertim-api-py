@@ -37,7 +37,7 @@ class Contact(Endpoint):
 	notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this contact')
 
 	#TODO:
-	# phones, smids, files, lfiles, puser, gid, cphoto, cf
+	# phones, smids, files, lfiles, gid, cphoto, cf
 
 
 Session.register_endpoint(Contact)
