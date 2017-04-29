@@ -1,12 +1,19 @@
 import os
 from setuptools import setup, find_packages
+import sys
 
 current_dir = os.path.abspath(os.path.dirname(__name__))
 with open(os.path.join(current_dir, 'README.md'), 'rb') as f:
 	long_description = f.read()
 
+requires_list = ['requests']
+	
+if sys.version_info <= (2, 6):
+	import unittest2 as unittest
+	requires_list.append('unittest2')
+else:
+	import unittest
 
-import unittest
 def unittest_discover_test_suite():
     test_loader = unittest.TestLoader()
     test_suite = test_loader.discover('tests', pattern='test_*.py')
@@ -38,7 +45,7 @@ setup(
 	keywords = 'Clevertim CRM contact management API development',
 
 	packages = find_packages(),
-	install_requires = ['requests'],
+	install_requires = requires_list,
 
 	test_suite = 'setup.unittest_discover_test_suite',
 
