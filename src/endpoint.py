@@ -82,6 +82,8 @@ class Endpoint(object):
 			self._load()
 		else:
 			self._content = {}
+			if hasattr(self, 'DEFAULTS'):
+				self._content.update(self.DEFAULTS)
 
 	def _check_needs_loading(self):
 		if self._key and not self._loaded:

@@ -7,6 +7,10 @@ class Contact(Endpoint):
 
 	ENDPOINT = '/contact'
 
+	DEFAULTS = {
+		'is_company': False
+	}
+
 	first_name = make_single_elem_property('fn', basestring, '', 'Contact\'s first name')
 	last_name = make_single_elem_property('ln', basestring, '', 'Contact\'s last name')
 	title = make_single_elem_property('title', basestring, '', 'Contact\'s title')

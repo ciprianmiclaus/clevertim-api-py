@@ -7,9 +7,13 @@ class Company(Endpoint):
 
 	ENDPOINT = '/company'
 
+	DEFAULTS = {
+		'is_company': True
+	}
+
 	name = make_single_elem_property('cn', basestring, '', 'Company\'s name')
 
-	address = make_single_elem_property('title', basestring, '', 'Company\'s address')
+	address = make_single_elem_property('address', basestring, '', 'Company\'s address')
 	city = make_single_elem_property('city', basestring, '', 'Company\'s city')
 	postcode = make_single_elem_property('postcode', basestring, '', 'Company\'s postcode')
 
