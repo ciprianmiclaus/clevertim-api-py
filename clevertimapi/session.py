@@ -54,7 +54,8 @@ class Session(object):
 	def make_request(self, endpoint, resource_id=None, method='GET', payload=None, reload=False):
 		assert endpoint, "Empty endpoint"
 
-		auth_token = base64.standard_b64encode(self.api_key + ':X')
+		auth_key = self.api_key + ':X'
+		auth_token = base64.standard_b64encode(auth_key.encode('ascii'))
 		headers = {
 			'Authorization': 'Basic %s' % (auth_token,),
 			'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
-from session import Session
-from endpoint import Endpoint, make_single_readonly_property
+from .session import Session
+from .endpoint import Endpoint, make_single_readonly_property
 
 
 class User(Endpoint):

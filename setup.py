@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 import sys
 
 current_dir = os.path.abspath(os.path.dirname(__name__))
-with open(os.path.join(current_dir, 'README.md'), 'rb') as f:
+with open(os.path.join(current_dir, 'README.md'), 'r') as f:
 	long_description = f.read()
 
 requires_list = ['requests']

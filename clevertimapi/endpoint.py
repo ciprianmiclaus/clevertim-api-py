@@ -1,4 +1,4 @@
-from session import Session
+from .session import Session
 
 def _attr_get(attr_name, default=None):
 	def _get(self):

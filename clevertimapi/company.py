@@ -1,6 +1,6 @@
-
-from endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property
-from session import Session
+from .compat import string_types
+from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property
+from .session import Session
 
 
 class Company(Endpoint):
@@ -11,20 +11,20 @@ class Company(Endpoint):
 		'is_company': True
 	}
 
-	name = make_single_elem_property('cn', basestring, '', 'Company\'s name')
+	name = make_single_elem_property('cn', string_types, '', 'Company\'s name')
 
-	address = make_single_elem_property('address', basestring, '', 'Company\'s address')
-	city = make_single_elem_property('city', basestring, '', 'Company\'s city')
-	postcode = make_single_elem_property('postcode', basestring, '', 'Company\'s postcode')
-	region = make_single_elem_property('region', basestring, '', 'Contact\'s region/district/state code')
-	country = make_single_elem_property('country', basestring, '', 'Contact\'s country code')
+	address = make_single_elem_property('address', string_types, '', 'Company\'s address')
+	city = make_single_elem_property('city', string_types, '', 'Company\'s city')
+	postcode = make_single_elem_property('postcode', string_types, '', 'Company\'s postcode')
+	region = make_single_elem_property('region', string_types, '', 'Contact\'s region/district/state code')
+	country = make_single_elem_property('country', string_types, '', 'Contact\'s country code')
 
-	description = make_single_elem_property('description', basestring, '', 'Some text about this company')
+	description = make_single_elem_property('description', string_types, '', 'Some text about this company')
 
-	emails = make_multi_elem_property('email', basestring, 'Company\'s list of email addresses')
-	websites = make_multi_elem_property('website', basestring, 'Company\'s list of web sites')
+	emails = make_multi_elem_property('email', string_types, 'Company\'s list of email addresses')
+	websites = make_multi_elem_property('website', string_types, 'Company\'s list of web sites')
 
-	tags = make_multi_elem_property('tags', basestring, 'List of tags this company was tagged with.')
+	tags = make_multi_elem_property('tags', string_types, 'List of tags this company was tagged with.')
 
 	tasks = make_multi_elem_ref_property('tasks', 'Task', 'List of tasks for this company')
 	opportunities = make_multi_elem_ref_property('opportunities', 'Opportunity', 'List of opportunities for this company')
