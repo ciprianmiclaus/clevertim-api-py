@@ -73,8 +73,13 @@ def _multi_ref_attr_set(attr_name, elem_ref_type):
 		self._content[attr_name] = value
 	return _set
 
-def make_multi_elem_ref_property(attr_name, elem_ref_type, doc_string=''):
-	return property(_multi_ref_attr_get(attr_name, elem_ref_type), _multi_ref_attr_set(attr_name, elem_ref_type), _attr_del(attr_name), doc_string)
+def make_multi_elem_ref_property(attr_name, elem_ref_type, doc_string='', readonly=False):
+	return property(
+		_multi_ref_attr_get(attr_name, elem_ref_type),
+		None if readonly else _multi_ref_attr_set(attr_name, elem_ref_type),
+		None if readonly else _attr_del(attr_name),
+		doc_string
+	)
 
 def make_single_readonly_property(attr_name, default=None, doc_string=''):
 	return property(_attr_get(attr_name, default=default), None, None, doc_string)
@@ -83,11 +88,25 @@ def make_single_readonly_property(attr_name, default=None, doc_string=''):
 
 class Endpoint(object):
 
-	def __init__(self, session, key=None, lazy_load=False):
+	VISIBILITY_PRIVATE = 'PRIVATE'
+	VISIBILITY_EVERYONE = 'EVERYONE'
+	VISIBILITY_GROUPS = 'GROUPS'
+
+	def __init__(self, session, key=None, content=None, lazy_load=False):
+		"""
+		Create an endpoint object.
+		
+		session - a Session instance
+		key - the key (unique id) of the object. When creating a new object and before saving, this will be None
+		content - when the content is provided, the instance is built from this content
+		lazy_load - when True, the instance is only loaded from the server on the first property access
+		"""
 		self.session = session
 		self._key = key
 		self._loaded = False
-		if self.key and not lazy_load:
+		if content is not None:
+			self._content = content
+		elif self.key and not lazy_load:
 			self._load()
 		else:
 			self._content = {}
@@ -100,8 +119,7 @@ class Endpoint(object):
 
 	def _load(self, reload=False):
 		assert self._key, "Cannot load a resource without a key"
-		ret = self.session.make_request(self.ENDPOINT, resource_id=self._key, reload=reload)
-		self._content = ret['content'][0]
+		self._content = self.session.make_request(self.ENDPOINT, resource_id=self._key, reload=reload)
 		self._loaded = True
 
 	def reload(self):
@@ -109,8 +127,7 @@ class Endpoint(object):
 
 	def save(self):
 		method = 'PUT' if self._key else 'POST'
-		ret = self.session.make_request(self.ENDPOINT, resource_id=self.key, method=method, payload=self._content)
-		self._content = ret['content'][0]
+		self._content = self.session.make_request(self.ENDPOINT, resource_id=self.key, method=method, payload=self._content)
 		self._key = self._content['id']
 		self._loaded = True
 
@@ -126,11 +143,21 @@ class Endpoint(object):
 		return self._key
 
 	@property
-	def is_private(self):
+	def visibility(self):
 		self._check_needs_loading()
-		return self._content.get('is_private', False)
+		if self._content.get('is_private', False):
+			return self.VISIBILITY_PRIVATE
+		if self._content.get('gid', 0):
+			return self.VISIBILITY_GROUPS
+		return self.VISIBILITY_EVERYONE
 
-	private_to = make_single_elem_ref_property('puser', 'User', 'The user this item is private to.', readonly=True)
+	private_to = make_single_elem_ref_property('puser', 'User', 'The user this item is private to (if any).')
+
+	def _get_groups(self):
+		pass
+
+	def _set_groups(self, value):
+		assert isinstance(value, list)
 
 	@property
 	def added_on(self):

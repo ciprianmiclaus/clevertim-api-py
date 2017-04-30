@@ -6,7 +6,7 @@ from .opportunity import Opportunity
 from .task import Task
 from .note import Note
 from .comment import Comment
-from .user import User
+from .user import User, Group
 
 
 

@@ -51,6 +51,19 @@ class Session(object):
 	def _get_cache_key(self, endpoint, resource_id):
 		return '%s%s' % (endpoint, resource_id)
 
+	def _get_cached_value(self, endpoint, resource_id):
+		if self.enable_caching:
+			cache_key = self._get_cache_key(endpoint, resource_id)
+			ret = self.session_cache.get(cache_key)
+			if ret:
+				return ret
+
+	def _update_cache(self, endpoint, resource_id, result):
+		if self.enable_caching:
+			for res in result:
+				cache_key = self._get_cache_key(endpoint, res['id'])
+				self.session_cache[cache_key] = res
+
 	def make_request(self, endpoint, resource_id=None, method='GET', payload=None, reload=False):
 		assert endpoint, "Empty endpoint"
 
@@ -66,13 +79,11 @@ class Session(object):
 
 		cache_key = None
 		if method == "GET":
-			if self.enable_caching:
-				cache_key = self._get_cache_key(endpoint, resource_id)
-				if not reload:
-					ret = self.session_cache.get(cache_key)
-					if ret:
-						log.debug("cache hit on GET %s", url)
-						return ret
+			if not reload:
+				val = self._get_cached_value(endpoint, resource_id)
+				if val is not None:
+					log.debug("cache hit on GET %s", url)
+					return val
 			log.debug("GET %s", url)
 			r = requests.get(url, headers = headers)
 		elif method == "POST":
@@ -99,12 +110,15 @@ class Session(object):
 		log.debug("Response %s %s", r.status_code, response)
 		result = response and json.loads(response) or None
 
-		# update the cache
-		if cache_key:
-			if result is not None:
-				self.session_cache[cache_key] = result
-			elif cache_key in self.session_cache:
-				del self.session_cache[cache_key]
+		if result is not None:
+			result = result['content']
+
+			# update the cache
+			if method != 'DELETE':
+				self._update_cache(endpoint, resource_id, result)
+
+			if method != 'GET' or resource_id is not None:
+				result = result[0]
 
 		return result
 		
@@ -116,3 +130,7 @@ class Session(object):
 			instance = cls(self, key=key, lazy_load=lazy_load)
 			self.instance_cache[cache_key] = instance
 		return instance
+
+	def get_all(self, endpoint_name):
+		pass
+

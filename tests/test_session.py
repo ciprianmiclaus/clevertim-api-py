@@ -19,6 +19,20 @@ class FakeEndpoint(object):
 
 class TestSession(unittest.TestCase):
 
+	def setUp(self):
+		self.payload = {
+			'id': 3434,
+			'key1': 1,
+			'key2': '2',
+			'key3': [1, '2', [3]]
+		}
+		self.response = {
+			'status': 'OK',
+			'content': [
+				self.payload
+			]
+		}
+
 	def test_get_without_register_fails(self):
 		session = Session(api_key='APIKEY')
 		with self.assertRaises(KeyError):
@@ -54,22 +68,20 @@ class TestSession(unittest.TestCase):
 		
 	@mock.patch('requests.get')
 	def test_make_request_get(self, mockRequestsGET):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 200
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsGET.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake')
 		ret = session.make_request(endpoint='/endpoint', resource_id=3434, method='GET')
-		self.assertEqual(ret, payload)
+		self.assertEqual(ret, self.payload)
 		mockRequestsGET.assert_called_once_with('http://localhost:8000/fake/endpoint/3434', headers = mock.ANY)
 
 	@mock.patch('requests.get')
 	def test_make_request_get_invalid_http_code_raises(self, mockRequestsGET):	
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 500
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsGET.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake')
 		with self.assertRaises(SessionError):
@@ -77,79 +89,72 @@ class TestSession(unittest.TestCase):
 
 	@mock.patch('requests.post')
 	def test_make_request_post(self, mockRequestsPOST):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 200
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsPOST.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
-		ret = session.make_request(endpoint='endpoint', method='POST', payload=payload)
-		self.assertEqual(ret, payload)
-		mockRequestsPOST.assert_called_once_with('http://localhost:8000/fake/endpoint', headers = mock.ANY, data=json.dumps(payload, separators=(',', ':')))
+		ret = session.make_request(endpoint='endpoint', method='POST', payload=self.payload)
+		self.assertEqual(ret, self.payload)
+		mockRequestsPOST.assert_called_once_with('http://localhost:8000/fake/endpoint', headers = mock.ANY, data=json.dumps(self.payload, separators=(',', ':')))
 
 	@mock.patch('requests.post')
 	def test_make_request_post_invalid_http_code_raises(self, mockRequestsPOST):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 401
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsPOST.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
 		with self.assertRaises(SessionError):
-			ret = session.make_request(endpoint='endpoint', method='POST', payload=payload)
+			ret = session.make_request(endpoint='endpoint', method='POST', payload=self.payload)
 
 	@mock.patch('requests.put')
 	def test_make_request_put(self, mockRequestsPUT):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 200
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsPUT.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
-		ret = session.make_request(endpoint='endpoint', resource_id=3434, method='PUT', payload=payload)
-		self.assertEqual(ret, payload)
-		mockRequestsPUT.assert_called_once_with('http://localhost:8000/fake/endpoint/3434', headers = mock.ANY, data=json.dumps(payload, separators=(',', ':')))
+		ret = session.make_request(endpoint='endpoint', resource_id=3434, method='PUT', payload=self.payload)
+		self.assertEqual(ret, self.payload)
+		mockRequestsPUT.assert_called_once_with('http://localhost:8000/fake/endpoint/3434', headers = mock.ANY, data=json.dumps(self.payload, separators=(',', ':')))
 
 	@mock.patch('requests.put')
 	def test_make_request_put_invalid_http_code_raises(self, mockRequestsPUT):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 404
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsPUT.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
 		with self.assertRaises(SessionError):
-			session.make_request(endpoint='endpoint', resource_id=3434, method='PUT', payload=payload)
+			session.make_request(endpoint='endpoint', resource_id=3434, method='PUT', payload=self.payload)
 
 	@mock.patch('requests.delete')
 	def test_make_request_delete(self, mockRequestsDELETE):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 200
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsDELETE.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
-		ret = session.make_request(endpoint='endpoint', resource_id='333', method='DELETE', payload=None)
-		self.assertEqual(ret, payload)
-		mockRequestsDELETE.assert_called_once_with('http://localhost:8000/fake/endpoint/333', headers = mock.ANY)
+		ret = session.make_request(endpoint='endpoint', resource_id='3434', method='DELETE', payload=None)
+		self.assertEqual(ret, self.payload)
+		mockRequestsDELETE.assert_called_once_with('http://localhost:8000/fake/endpoint/3434', headers = mock.ANY)
 
 	@mock.patch('requests.delete')
 	def test_make_request_delete_invalid_http_code_raises(self, mockRequestsDELETE):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 470
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsDELETE.return_value = response
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
 		with self.assertRaises(SessionError):
-			session.make_request(endpoint='endpoint', resource_id='333', method='DELETE', payload=None)
+			session.make_request(endpoint='endpoint', resource_id='3434', method='DELETE', payload=None)
 
 	@mock.patch('requests.get')
 	def test_caching_enabled_2nd_get_hits_cache(self, mockRequestsGET):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 200
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsGET.return_value = response
 
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake', enable_caching=True)
@@ -162,10 +167,9 @@ class TestSession(unittest.TestCase):
 
 	@mock.patch('requests.get')
 	def test_caching_enabled_2nd_get_with_reload_hits_server(self, mockRequestsGET):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 200
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsGET.return_value = response
 
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake', enable_caching=True)
@@ -179,10 +183,9 @@ class TestSession(unittest.TestCase):
 
 	@mock.patch('requests.get')
 	def test_caching_disabled_2nd_get_hits_server(self, mockRequestsGET):
-		payload = { 'key1': 1, 'key2': '2', 'key3': [1, '2', [3]] }
 		response = mock.Mock()
 		response.status_code = 200
-		response.text = json.dumps(payload)
+		response.text = json.dumps(self.response)
 		mockRequestsGET.return_value = response
 
 		session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake', enable_caching=False)
