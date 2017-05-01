@@ -96,6 +96,10 @@ def make_single_readonly_property(attr_name, default=None, doc_string=''):
     return property(_attr_get(attr_name, default=default), None, None, doc_string)
 
 
+class ValidationError(Exception):
+    """Raised when the validation of the instance fails before a save."""
+
+
 class Endpoint(object):
 
     class VISIBILITY(object):
@@ -136,7 +140,13 @@ class Endpoint(object):
     def reload(self):
         self._load(reload=True)
 
+    def validate(self):
+        """Validates the current instance before save.
+        When it fails, validate raises a ValidationError exception."""
+        pass
+
     def save(self):
+        self.validate()
         method = 'PUT' if self._key else 'POST'
         self._content = self.session.make_request(self.ENDPOINT, resource_id=self.key, method=method, payload=self._content)
         self._key = self._content['id']
