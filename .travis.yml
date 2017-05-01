@@ -8,7 +8,11 @@ python:
   - "3.5"
   - "3.6"
 install:
-    - pip install requests==2.7.0
+  - pip install requests==2.7.0
+  - pip install flake8==3.3.0
 before_script:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2; fi
-script: python setup.py test
+  #ignore line too long in flake8
+  - flake8 --ignore E501 .
+script:
+  - python setup.py test
