@@ -8,5 +8,15 @@ from .note import Note
 from .comment import Comment
 from .user import User, Group
 
-
-
+__all__ = [
+    'Session',
+    'Contact',
+    'Company',
+    'Case',
+    'Opportunity',
+    'Task',
+    'Note',
+    'Comment',
+    'User',
+    'Group',
+]

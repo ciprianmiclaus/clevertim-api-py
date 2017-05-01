@@ -1,6 +1,6 @@
 
 try:
-	basestring
-	string_types = (basestring,)
+    basestring
+    string_types = (basestring,)
 except NameError:
-	string_types = (str, bytes)
+    string_types = (str, bytes)
