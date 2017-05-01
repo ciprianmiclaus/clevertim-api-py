@@ -4,49 +4,50 @@ import sys
 
 current_dir = os.path.abspath(os.path.dirname(__name__))
 with open(os.path.join(current_dir, 'README.md'), 'r') as f:
-	long_description = f.read()
+    long_description = f.read()
 
 requires_list = ['requests']
-	
+
 if sys.version_info[:2] < (2, 7):
-	import unittest2 as unittest
-	requires_list.append('unittest2')
+    import unittest2 as unittest
+    requires_list.append('unittest2')
 else:
-	import unittest
+    import unittest
+
 
 def unittest_discover_test_suite():
     test_loader = unittest.TestLoader()
     test_suite = test_loader.discover('tests', pattern='test_*.py')
     return test_suite
-	
-	
+
+
 setup(
-	name = 'clevertimapi',
-	version = '0.0.1',
-	description = 'Clevertim CRM Python API',
-	long_description = long_description,
-	url = 'https://github.com/ciprianmiclaus/clevertim-api-py',
-	author = 'Ciprian Miclaus',
-	author_email = 'ciprianm@gmail.com',
-	license = 'BSD3',
-	
-	classifiers = [
-		'Development Status :: 3 - Alpha',
+    name='clevertimapi',
+    version='0.0.1',
+    description='Clevertim CRM Python API',
+    long_description=long_description,
+    url='https://github.com/ciprianmiclaus/clevertim-api-py',
+    author='Ciprian Miclaus',
+    author_email='ciprianm@gmail.com',
+    license='BSD3',
 
-		'Intended Audience :: Developers',
-		'Topic :: Software Development :: API',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
 
-		'Programming Language :: Python :: 2',
-		'Programming Language :: Python :: 2.7',
-		'Programming Language :: Python :: 3',
-		'Programming Language :: Python :: 3.5',
-	],
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: API',
 
-	keywords = 'Clevertim CRM contact management API development',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+    ],
 
-	packages = find_packages(),
-	install_requires = requires_list,
+    keywords='Clevertim CRM contact management API development',
 
-	test_suite = 'setup.unittest_discover_test_suite',
+    packages=find_packages(),
+    install_requires=requires_list,
+
+    test_suite='setup.unittest_discover_test_suite',
 
 )
