@@ -32,5 +32,10 @@ class Company(Endpoint):
 
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this company')
 
+    @property
+    def last_contacted(self):
+        self._check_needs_loading()
+        return self._content.get('lc')
+
 
 Session.register_endpoint(Company)

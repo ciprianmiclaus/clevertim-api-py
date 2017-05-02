@@ -36,8 +36,13 @@ class TestCompany(unittest.TestCase):
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
-            'cases': [55, 57]
+            'cases': [55, 57],
         }
+        self.company1_ret = deepcopy(self.company1)
+        self.company1_ret.update({
+            'id': 445,
+            'lc': '2017-01-02T05:22:12Z',
+        })
         self.company2 = {
             'id': 445,
             'cn': 'Some Ltd.',
@@ -53,26 +58,11 @@ class TestCompany(unittest.TestCase):
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
-            'cases': [55, 89]
+            'cases': [55, 89],
+            'lc': '2017-01-02T05:22:12Z',
         }
 
-    @mock.patch('requests.get')
-    def test_load_company(self, mockRequestsGET):
-        c1 = deepcopy(self.company1)
-        c1['id'] = 445
-
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                c1
-            ]
-        })
-        mockRequestsGET.return_value = response
-
-        c = Company(self.session, key=445)
-        self.assertFalse(c.is_new())
+    def _compare_against_company1_ret(self, c):
         self.assertEqual(c.key, 445)
         self.assertEqual(c.name, 'Clevertim Ltd.')
         self.assertEqual(c.address, '199 Maverick Road')
@@ -92,6 +82,24 @@ class TestCompany(unittest.TestCase):
         self.assertTrue(all(isinstance(t, Case) for t in c.cases))
         self.assertEqual([t.key for t in c.cases], [55, 57])
 
+        self.assertEqual(c.last_contacted, '2017-01-02T05:22:12Z')
+
+    @mock.patch('requests.get')
+    def test_load_company(self, mockRequestsGET):
+        response = mock.Mock()
+        response.status_code = 200
+        response.text = json.dumps({
+            'status': 'OK',
+            'content': [
+                self.company1_ret
+            ]
+        })
+        mockRequestsGET.return_value = response
+
+        c = Company(self.session, key=445)
+        self.assertFalse(c.is_new())
+        self._compare_against_company1_ret(c)
+
     @mock.patch('requests.post')
     def test_add_new_company(self, mockRequestsPOST):
         response = mock.Mock()
@@ -100,7 +108,8 @@ class TestCompany(unittest.TestCase):
             'status': 'OK',
             'content': [
                 {
-                    'id': 3456
+                    'id': 445,
+                    'lc': '2017-01-02T05:22:12Z',
                 }
             ]
         })
@@ -125,7 +134,7 @@ class TestCompany(unittest.TestCase):
         self.assertTrue(c.is_new())
         c.save()
         self.assertFalse(c.is_new())
-        self.assertEqual(c.key, 3456)
+        self.assertEqual(c.key, 445)
 
         args = mockRequestsPOST.call_args_list[0]
         session_url = args[0][0]
@@ -134,18 +143,17 @@ class TestCompany(unittest.TestCase):
         self.assertEqual(session_url, Session.ENDPOINT_URL + Company.ENDPOINT)
         self.assertEqual(data, self.company1)
 
+        self._compare_against_company1_ret(c)
+
     @mock.patch('requests.put')
     @mock.patch('requests.get')
     def test_edit_existing_company(self, mockRequestsGET, mockRequestsPUT):
-        c1 = deepcopy(self.company1)
-        c1['id'] = 445
-
         response = mock.Mock()
         response.status_code = 200
         response.text = json.dumps({
             'status': 'OK',
             'content': [
-                c1
+                self.company1_ret
             ]
         })
         mockRequestsGET.return_value = response

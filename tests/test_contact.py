@@ -40,8 +40,13 @@ class TestContact(unittest.TestCase):
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
-            'cases': [55, 57]
+            'cases': [55, 57],
         }
+        self.contact1_ret = deepcopy(self.contact1)
+        self.contact1_ret.update({
+            'id': 445,
+            'lc': '2017-01-02T05:22:12Z',
+        })
         self.contact2 = {
             'id': 445,
             'fn': 'John',
@@ -60,26 +65,11 @@ class TestContact(unittest.TestCase):
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
-            'cases': [55, 89]
+            'cases': [55, 89],
+            'lc': '2017-01-02T05:22:12Z',
         }
 
-    @mock.patch('requests.get')
-    def test_load_contact(self, mockRequestsGET):
-        c1 = deepcopy(self.contact1)
-        c1['id'] = 445
-
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                c1
-            ]
-        })
-        mockRequestsGET.return_value = response
-
-        c = Contact(self.session, key=445)
-        self.assertFalse(c.is_new())
+    def _compare_against_contact1_ret(self, c):
         self.assertEqual(c.key, 445)
         self.assertEqual(c.first_name, 'Mike')
         self.assertEqual(c.last_name, 'Doodley')
@@ -104,6 +94,24 @@ class TestContact(unittest.TestCase):
         self.assertTrue(all(isinstance(t, Case) for t in c.cases))
         self.assertEqual([t.key for t in c.cases], [55, 57])
 
+        self.assertEqual(c.last_contacted, '2017-01-02T05:22:12Z')
+
+    @mock.patch('requests.get')
+    def test_load_contact(self, mockRequestsGET):
+        response = mock.Mock()
+        response.status_code = 200
+        response.text = json.dumps({
+            'status': 'OK',
+            'content': [
+                self.contact1_ret
+            ]
+        })
+        mockRequestsGET.return_value = response
+
+        c = Contact(self.session, key=445)
+        self.assertFalse(c.is_new())
+        self._compare_against_contact1_ret(c)
+
     @mock.patch('requests.post')
     def test_add_new_contact(self, mockRequestsPOST):
         response = mock.Mock()
@@ -111,9 +119,7 @@ class TestContact(unittest.TestCase):
         response.text = json.dumps({
             'status': 'OK',
             'content': [
-                {
-                    'id': 3456
-                }
+                self.contact1_ret
             ]
         })
         mockRequestsPOST.return_value = response
@@ -141,7 +147,7 @@ class TestContact(unittest.TestCase):
         self.assertTrue(c.is_new())
         c.save()
         self.assertFalse(c.is_new())
-        self.assertEqual(c.key, 3456)
+        self.assertEqual(c.key, 445)
 
         args = mockRequestsPOST.call_args_list[0]
         session_url = args[0][0]
@@ -150,18 +156,17 @@ class TestContact(unittest.TestCase):
         self.assertEqual(session_url, Session.ENDPOINT_URL + Contact.ENDPOINT)
         self.assertEqual(data, self.contact1)
 
+        self._compare_against_contact1_ret(c)
+
     @mock.patch('requests.put')
     @mock.patch('requests.get')
     def test_edit_existing_contact(self, mockRequestsGET, mockRequestsPUT):
-        c1 = deepcopy(self.contact1)
-        c1['id'] = 445
-
         response = mock.Mock()
         response.status_code = 200
         response.text = json.dumps({
             'status': 'OK',
             'content': [
-                c1
+                self.contact1_ret
             ]
         })
         mockRequestsGET.return_value = response
@@ -171,7 +176,8 @@ class TestContact(unittest.TestCase):
             'status': 'OK',
             'content': [
                 {
-                    'id': 445
+                    'id': 445,
+                    'lc': '2017-01-02T05:22:12Z',
                 }
             ]
         })

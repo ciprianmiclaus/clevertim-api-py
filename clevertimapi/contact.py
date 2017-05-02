@@ -1,6 +1,29 @@
 from .compat import string_types
-from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_single_elem_ref_property, make_multi_elem_ref_property
+from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_single_elem_ref_property, make_multi_elem_ref_property, ValueSerializer, ValidationError
 from .session import Session
+
+
+class PhoneNumber(ValueSerializer):
+
+    def __init__(self):
+        self._content = {}
+
+    @staticmethod
+    def is_valid_phone_type(value):
+        valid_values = ('Work', 'Home', 'Mobile', 'Fax', 'Pager')
+        if value not in valid_values:
+            raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(valid_values)))
+
+    phone_number = make_single_elem_property('no', string_types, '', 'Phone number')
+    phone_type = make_single_elem_property('type', string_types, '', 'Phone type: Work, Home, Mobile, Fax or Pager', validate_func=is_valid_phone_type)
+
+    def serialize(self, value):
+        no = self._content.get('no')
+        if not no or not isinstance(no, string_types):
+            raise ValidationError("Invalid phone number.")
+        phone_type = self._content.get('type')
+        self.is_valid_phone_type(phone_type)
+        return self._content
 
 
 class Contact(Endpoint):
@@ -35,6 +58,11 @@ class Contact(Endpoint):
     cases = make_multi_elem_ref_property('cases', 'Case', 'List of cases for this contact')
 
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this contact')
+
+    @property
+    def last_contacted(self):
+        self._check_needs_loading()
+        return self._content.get('lc')
 
     # TODO:
     # phones, smids, files, lfiles, gid, cphoto, cf

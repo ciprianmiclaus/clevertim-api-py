@@ -1,6 +1,11 @@
 from .session import Session
 
 
+class ValueSerializer(object):
+    def serialize(self, value):
+        """Custom serialize a value."""
+
+
 def _attr_get(attr_name, default=None):
     def _get(self):
         self._check_needs_loading()
@@ -14,27 +19,33 @@ def _attr_del(attr_name):
     return _del
 
 
-def _single_attr_set(attr_name, attr_type):
+def _single_attr_set(attr_name, attr_type, validate_func=None):
     def _set(self, value):
         assert isinstance(value, attr_type) or value is None
+        if validate_func:
+            validate_func(value)
+        if isinstance(value, ValueSerializer):
+            value = value.serialize()
         self._content[attr_name] = value
     return _set
 
 
-def _multi_attr_set(attr_name, list_elem_type):
+def _multi_attr_set(attr_name, list_elem_type, validate_func=None):
     def _set(self, value):
         assert isinstance(value, list) or value is None
         assert all(isinstance(elem, list_elem_type) for elem in value)
-        self._content[attr_name] = value
+        if validate_func:
+            validate_func(value)
+        self._content[attr_name] = [v.serialize() if isinstance(v, ValueSerializer) else v for v in value]
     return _set
 
 
-def make_single_elem_property(attr_name, elem_type, default=None, doc_string=''):
-    return property(_attr_get(attr_name, default), _single_attr_set(attr_name, elem_type), _attr_del(attr_name), doc_string)
+def make_single_elem_property(attr_name, elem_type, default=None, doc_string='', validate_func=None):
+    return property(_attr_get(attr_name, default), _single_attr_set(attr_name, elem_type, validate_func=validate_func), _attr_del(attr_name), doc_string)
 
 
-def make_multi_elem_property(attr_name, elem_type, doc_string=''):
-    return property(_attr_get(attr_name, default=[]), _multi_attr_set(attr_name, elem_type), _attr_del(attr_name), doc_string)
+def make_multi_elem_property(attr_name, elem_type, doc_string='', validate_func=None):
+    return property(_attr_get(attr_name, default=[]), _multi_attr_set(attr_name, elem_type, validate_func=validate_func), _attr_del(attr_name), doc_string)
 
 
 def _single_ref_attr_get(attr_name, elem_ref_type):
@@ -143,13 +154,13 @@ class Endpoint(object):
     def validate(self):
         """Validates the current instance before save.
         When it fails, validate raises a ValidationError exception."""
-        pass
 
     def save(self):
         self.validate()
         method = 'PUT' if self._key else 'POST'
-        self._content = self.session.make_request(self.ENDPOINT, resource_id=self.key, method=method, payload=self._content)
-        self._key = self._content['id']
+        ret = self.session.make_request(self.ENDPOINT, resource_id=self.key, method=method, payload=self._content)
+        self._key = ret['id']
+        self._content.update(ret)
         self._loaded = True
 
     def delete(self):
@@ -189,8 +200,3 @@ class Endpoint(object):
     def last_modified(self):
         self._check_needs_loading()
         return self._content.get('lm')
-
-    @property
-    def last_contacted(self):
-        self._check_needs_loading()
-        return self._content.get('lc')

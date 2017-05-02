@@ -24,7 +24,6 @@ class TestEndpoint(unittest.TestCase):
                 'is_private': True,
                 'ao': 'now',
                 'lm': '2017-01-04T10:23:22Z',
-                'lc': '2017-01-02T05:22:12Z',
             }]
         }
 
@@ -50,7 +49,6 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(self.mockRequestsGET.call_count, 1)
         self.assertEqual(endpoint.added_on, 'now')
         self.assertEqual(endpoint.last_modified, '2017-01-04T10:23:22Z')
-        self.assertEqual(endpoint.last_contacted, '2017-01-02T05:22:12Z')
         self.assertEqual(self.mockRequestsGET.call_count, 1)
 
     def test_unlazy_load_loads_in_init(self):
@@ -61,7 +59,6 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(endpoint.visibility, Endpoint.VISIBILITY.PRIVATE)
         self.assertEqual(endpoint.added_on, 'now')
         self.assertEqual(endpoint.last_modified, '2017-01-04T10:23:22Z')
-        self.assertEqual(endpoint.last_contacted, '2017-01-02T05:22:12Z')
         self.assertEqual(self.mockRequestsGET.call_count, 1)
 
     def test_lazy_load_reload(self):
@@ -76,7 +73,6 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(self.mockRequestsGET.call_count, 1)
         self.assertEqual(endpoint.added_on, 'now')
         self.assertEqual(endpoint.last_modified, '2017-01-04T10:23:22Z')
-        self.assertEqual(endpoint.last_contacted, '2017-01-02T05:22:12Z')
         self.assertEqual(self.mockRequestsGET.call_count, 1)
 
     def test_unlazy_load_reload(self):
@@ -91,7 +87,6 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(self.mockRequestsGET.call_count, 2)
         self.assertEqual(endpoint.added_on, 'now')
         self.assertEqual(endpoint.last_modified, '2017-01-04T10:23:22Z')
-        self.assertEqual(endpoint.last_contacted, '2017-01-02T05:22:12Z')
         self.assertEqual(self.mockRequestsGET.call_count, 2)
 
     def test_reload_on_new_lazy_endpoint_fails(self):
