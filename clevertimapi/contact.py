@@ -1,6 +1,7 @@
 from .compat import string_types
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_single_elem_ref_property, make_multi_elem_ref_property, ValueSerializer, ValidationError
 from .session import Session
+from .customfield import ContactCustomFieldValue
 
 
 class PhoneNumber(ValueSerializer):
@@ -19,7 +20,7 @@ class PhoneNumber(ValueSerializer):
             if value not in cls.ALL_VALID_VALUES:
                 raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
 
-    def __init__(self, content=None, phone_number=None, phone_type=None):
+    def __init__(self, content=None, phone_number=None, phone_type=None, session=None):
         self._content = {}
         if content:
             phone_number = content.get('no')
@@ -91,7 +92,7 @@ class SocialMediaId(ValueSerializer):
             if value not in cls.ALL_VALID_VALUES:
                 raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
 
-    def __init__(self, content=None, social_media_id=None, social_media_type=None):
+    def __init__(self, content=None, social_media_id=None, social_media_type=None, session=None):
         self._content = {}
         if content:
             social_media_id = content.get('smid')
@@ -154,13 +155,15 @@ class Contact(Endpoint):
 
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this contact')
 
+    custom_field_values = make_multi_elem_property('cf', ContactCustomFieldValue, 'Contact\'s list of custom field values', custom_type=ContactCustomFieldValue)
+
     @property
     def last_contacted(self):
         self._check_needs_loading()
         return self._content.get('lc')
 
     # TODO:
-    # smids, files, lfiles, gid, cphoto, cf
+    # files, lfiles, gid, cphoto
 
 
 Session.register_endpoint(Contact)

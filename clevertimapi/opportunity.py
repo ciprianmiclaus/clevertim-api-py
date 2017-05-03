@@ -1,6 +1,7 @@
 from .compat import string_types
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property, make_single_elem_ref_property
 from .session import Session
+from .customfield import OpportunityCustomFieldValue
 
 
 class Opportunity(Endpoint):
@@ -19,6 +20,8 @@ class Opportunity(Endpoint):
 
     tasks = make_multi_elem_ref_property('tasks', 'Task', 'List of tasks for this oppotunity')
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this opportunity')
+
+    custom_field_values = make_multi_elem_property('cf', OpportunityCustomFieldValue, 'Opportunity\'s list of custom field values', custom_type=OpportunityCustomFieldValue)
 
 
 Session.register_endpoint(Opportunity)

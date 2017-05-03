@@ -2,6 +2,7 @@ import base64
 import logging
 import json
 import requests
+from .compat import string_types
 
 
 log = logging.getLogger(__name__)
@@ -38,6 +39,15 @@ class Session(object):
     @classmethod
     def enpoint_name_to_cls(cls, endpoint_name):
         return cls.ENDPOINT_FACTORY[endpoint_name]
+
+    @classmethod
+    def is_registered_endpoint(cls, endpoint_name_or_cls):
+        if isinstance(endpoint_name_or_cls, string_types):
+            return endpoint_name_or_cls in cls.ENDPOINT_FACTORY
+        ret = getattr(endpoint_name_or_cls, '__name__')
+        if ret:
+            return ret in cls.ENDPOINT_FACTORY
+        return False
 
     def _get_url(self, endpoint, resource_id=None):
         url = self.endpoint_url

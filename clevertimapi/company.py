@@ -2,6 +2,7 @@ from .compat import string_types
 from .contact import PhoneNumber, SocialMediaId
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property
 from .session import Session
+from .customfield import CompanyCustomFieldValue
 
 
 class Company(Endpoint):
@@ -17,15 +18,15 @@ class Company(Endpoint):
     address = make_single_elem_property('address', string_types, '', 'Company\'s address')
     city = make_single_elem_property('city', string_types, '', 'Company\'s city')
     postcode = make_single_elem_property('postcode', string_types, '', 'Company\'s postcode')
-    region = make_single_elem_property('region', string_types, '', 'Contact\'s region/district/state code')
-    country = make_single_elem_property('country', string_types, '', 'Contact\'s country code')
+    region = make_single_elem_property('region', string_types, '', 'Company\'s region/district/state code')
+    country = make_single_elem_property('country', string_types, '', 'Company\'s country code')
 
     description = make_single_elem_property('description', string_types, '', 'Some text about this company')
 
     emails = make_multi_elem_property('email', string_types, 'Company\'s list of email addresses')
     websites = make_multi_elem_property('website', string_types, 'Company\'s list of web sites')
     phone_numbers = make_multi_elem_property('phones', PhoneNumber, 'Company\'s list of phone numbers', custom_type=PhoneNumber)
-    social_media_ids = make_multi_elem_property('smids', SocialMediaId, 'Contact\'s list of social media ids', custom_type=SocialMediaId)
+    social_media_ids = make_multi_elem_property('smids', SocialMediaId, 'Company\'s list of social media ids', custom_type=SocialMediaId)
 
     tags = make_multi_elem_property('tags', string_types, 'List of tags this company was tagged with.')
 
@@ -34,6 +35,8 @@ class Company(Endpoint):
     cases = make_multi_elem_ref_property('cases', 'Case', 'List of cases for this company')
 
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this company')
+
+    custom_field_values = make_multi_elem_property('cf', CompanyCustomFieldValue, 'Company\'s list of custom field values', custom_type=CompanyCustomFieldValue)
 
     @property
     def last_contacted(self):
