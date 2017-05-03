@@ -11,7 +11,7 @@ python:
   - "pypy3"
 install:
   - pip install requests==2.7.0
-  - pip install coveralls
+  - pip install coveralls==0.5
 before_script:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2; fi
   #ignore line too long in flake8 (flake8 doesn't support Python 2.6 anymore)
