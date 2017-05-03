@@ -5,8 +5,15 @@ from .session import Session
 
 class PhoneNumber(ValueSerializer):
 
-    def __init__(self):
+    def __init__(self, content=None, phone_number=None, phone_type=None):
         self._content = {}
+        if content:
+            phone_number = content.get('no')
+            phone_type = content.get('type')
+        if phone_type is not None:
+            self.phone_type = phone_type
+        if phone_number is not None:
+            self.phone_number = phone_number
 
     @staticmethod
     def is_valid_phone_type(value):
@@ -15,15 +22,21 @@ class PhoneNumber(ValueSerializer):
             raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(valid_values)))
 
     phone_number = make_single_elem_property('no', string_types, '', 'Phone number')
-    phone_type = make_single_elem_property('type', string_types, '', 'Phone type: Work, Home, Mobile, Fax or Pager', validate_func=is_valid_phone_type)
+    phone_type = make_single_elem_property('type', string_types, '', 'Phone type: Work, Home, Mobile, Fax or Pager', validate_func=is_valid_phone_type.__func__)
 
-    def serialize(self, value):
+    def serialize(self):
         no = self._content.get('no')
         if not no or not isinstance(no, string_types):
             raise ValidationError("Invalid phone number.")
         phone_type = self._content.get('type')
         self.is_valid_phone_type(phone_type)
         return self._content
+
+    def __eq__(self, other):
+        return self.phone_number == other.phone_number and self.phone_type == other.phone_type
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Contact(Endpoint):
@@ -50,6 +63,7 @@ class Contact(Endpoint):
 
     emails = make_multi_elem_property('email', string_types, 'Contact\'s list of email addresses')
     websites = make_multi_elem_property('website', string_types, 'Contact\'s list of web sites')
+    phone_numbers = make_multi_elem_property('phones', PhoneNumber, 'Contact\'s list of phone numbers', custom_type=PhoneNumber)
 
     tags = make_multi_elem_property('tags', string_types, 'List of tags this contact was tagged with.')
 
@@ -65,7 +79,7 @@ class Contact(Endpoint):
         return self._content.get('lc')
 
     # TODO:
-    # phones, smids, files, lfiles, gid, cphoto, cf
+    # smids, files, lfiles, gid, cphoto, cf
 
 
 Session.register_endpoint(Contact)

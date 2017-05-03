@@ -1,5 +1,5 @@
 from clevertimapi.session import Session
-from clevertimapi.company import Company
+from clevertimapi.company import Company, PhoneNumber
 from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
 from clevertimapi.case import Case
@@ -33,6 +33,7 @@ class TestCompany(unittest.TestCase):
             'description': 'Clevertim is a great company. They do software.',
             'email': ['sales@gmail.com', 'support@yahoo.com'],
             'website': ['http://www.clevertim.com', 'http://www.clevertim.org'],
+            'phones': [{'no': '07979463643', 'type': 'Work'}, {'no': '07979363643', 'type': 'Home'}, {'no': '07979163643', 'type': 'Mobile'}],
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
@@ -55,6 +56,7 @@ class TestCompany(unittest.TestCase):
             'description': 'Some Ltd. is fantastic. Its customer support is unlike anything out there.',
             'email': ['support@someltd.com', 'some.ltd@yahoo.com'],
             'website': ['http://www.johnrowdy.com', 'http://www.yahoo.com'],
+            'phones': [{'no': '+4407979463643', 'type': 'Fax'}, {'no': '+4407979363643', 'type': 'Pager'}, {'no': '+4407979163643', 'type': 'Work'}],
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
@@ -73,6 +75,11 @@ class TestCompany(unittest.TestCase):
         self.assertEqual(c.description, 'Clevertim is a great company. They do software.',)
         self.assertEqual(c.emails, ['sales@gmail.com', 'support@yahoo.com'])
         self.assertEqual(c.websites, ['http://www.clevertim.com', 'http://www.clevertim.org'])
+        self.assertEqual(c.phone_numbers, [
+            PhoneNumber(phone_number='07979463643', phone_type='Work'),
+            PhoneNumber(phone_number='07979363643', phone_type='Home'),
+            PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
+        ])
         self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
 
         self.assertTrue(all(isinstance(t, Task) for t in c.tasks))
@@ -125,6 +132,11 @@ class TestCompany(unittest.TestCase):
         c.description = 'Clevertim is a great company. They do software.'
         c.emails = ['sales@gmail.com', 'support@yahoo.com']
         c.websites = ['http://www.clevertim.com', 'http://www.clevertim.org']
+        c.phone_numbers = [
+            PhoneNumber(phone_number='07979463643', phone_type='Work'),
+            PhoneNumber(phone_number='07979363643', phone_type='Home'),
+            PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
+        ]
         c.tags = ['tag1', 'tag2', 'tag3']
 
         c.tasks = [Task(self.session, key=1, lazy_load=True), Task(self.session, key=2, lazy_load=True)]
@@ -179,6 +191,11 @@ class TestCompany(unittest.TestCase):
         c.description = 'Some Ltd. is fantastic. Its customer support is unlike anything out there.'
         c.emails = ['support@someltd.com', 'some.ltd@yahoo.com']
         c.websites = ['http://www.johnrowdy.com', 'http://www.yahoo.com']
+        c.phone_numbers = [
+            PhoneNumber(phone_number='+4407979463643', phone_type='Fax'),
+            PhoneNumber(phone_number='+4407979363643', phone_type='Pager'),
+            PhoneNumber(phone_number='+4407979163643', phone_type='Work'),
+        ]
         c.tags = ['othertag1', 'othertag2', 'othertag3']
 
         c.company = Company(self.session, key=456, lazy_load=True)

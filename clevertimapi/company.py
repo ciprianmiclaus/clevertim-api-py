@@ -1,4 +1,5 @@
 from .compat import string_types
+from .contact import PhoneNumber
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property
 from .session import Session
 
@@ -23,6 +24,7 @@ class Company(Endpoint):
 
     emails = make_multi_elem_property('email', string_types, 'Company\'s list of email addresses')
     websites = make_multi_elem_property('website', string_types, 'Company\'s list of web sites')
+    phone_numbers = make_multi_elem_property('phones', PhoneNumber, 'Company\'s list of phone numbers', custom_type=PhoneNumber)
 
     tags = make_multi_elem_property('tags', string_types, 'List of tags this company was tagged with.')
 

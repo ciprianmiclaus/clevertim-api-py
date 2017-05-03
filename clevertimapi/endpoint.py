@@ -2,14 +2,30 @@ from .session import Session
 
 
 class ValueSerializer(object):
-    def serialize(self, value):
+    def _check_needs_loading(self):
+        """check if it needs to load the endpoint."""
+
+    def serialize(self):
         """Custom serialize a value."""
 
 
-def _attr_get(attr_name, default=None):
+def _single_attr_get(attr_name, default=None):
     def _get(self):
         self._check_needs_loading()
         return self._content.get(attr_name, default)
+    return _get
+
+
+def _multi_attr_get(attr_name, default=None, custom_type=None, readonly=False):
+    def _get(self):
+        self._check_needs_loading()
+        ret = self._content.get(attr_name, default)
+        if ret is not None:
+            if custom_type:
+                ret = [custom_type(ct) for ct in ret]
+            if readonly:
+                return tuple(ret)
+            return ret
     return _get
 
 
@@ -41,11 +57,16 @@ def _multi_attr_set(attr_name, list_elem_type, validate_func=None):
 
 
 def make_single_elem_property(attr_name, elem_type, default=None, doc_string='', validate_func=None):
-    return property(_attr_get(attr_name, default), _single_attr_set(attr_name, elem_type, validate_func=validate_func), _attr_del(attr_name), doc_string)
+    return property(_single_attr_get(attr_name, default), _single_attr_set(attr_name, elem_type, validate_func=validate_func), _attr_del(attr_name), doc_string)
 
 
-def make_multi_elem_property(attr_name, elem_type, doc_string='', validate_func=None):
-    return property(_attr_get(attr_name, default=[]), _multi_attr_set(attr_name, elem_type, validate_func=validate_func), _attr_del(attr_name), doc_string)
+def make_multi_elem_property(attr_name, elem_type, doc_string='', validate_func=None, custom_type=None, readonly=False):
+    return property(
+        _multi_attr_get(attr_name, default=[], custom_type=custom_type, readonly=readonly),
+        None if readonly else _multi_attr_set(attr_name, elem_type, validate_func=validate_func),
+        None if readonly else _attr_del(attr_name),
+        doc_string
+    )
 
 
 def _single_ref_attr_get(attr_name, elem_ref_type):
@@ -104,7 +125,7 @@ def make_multi_elem_ref_property(attr_name, elem_ref_type, doc_string='', readon
 
 
 def make_single_readonly_property(attr_name, default=None, doc_string=''):
-    return property(_attr_get(attr_name, default=default), None, None, doc_string)
+    return property(_single_attr_get(attr_name, default=default), None, None, doc_string)
 
 
 class ValidationError(Exception):

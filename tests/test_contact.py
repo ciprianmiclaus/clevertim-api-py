@@ -1,5 +1,5 @@
 from clevertimapi.session import Session
-from clevertimapi.contact import Contact
+from clevertimapi.contact import Contact, PhoneNumber
 from clevertimapi.company import Company
 from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
@@ -37,6 +37,7 @@ class TestContact(unittest.TestCase):
             'description': 'Mike is a great, likeable guy. He always returns my calls.',
             'email': ['mike.doodley@gmail.com', 'mike.doodley@yahoo.com'],
             'website': ['http://www.google.com', 'http://www.mikedoodley.com'],
+            'phones': [{'no': '07979463643', 'type': 'Work'}, {'no': '07979363643', 'type': 'Home'}, {'no': '07979163643', 'type': 'Mobile'}],
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
@@ -62,6 +63,7 @@ class TestContact(unittest.TestCase):
             'description': 'John is very bossy. He even lives on a bossy lane.',
             'email': ['john.rowdy@gmail.com', 'john.rowdy@yahoo.com'],
             'website': ['http://www.johnrowdy.com', 'http://www.yahoo.com'],
+            'phones': [{'no': '+4407979463643', 'type': 'Fax'}, {'no': '+4407979363643', 'type': 'Pager'}, {'no': '+4407979163643', 'type': 'Work'}],
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
@@ -82,6 +84,11 @@ class TestContact(unittest.TestCase):
         self.assertEqual(c.description, 'Mike is a great, likeable guy. He always returns my calls.')
         self.assertEqual(c.emails, ['mike.doodley@gmail.com', 'mike.doodley@yahoo.com'])
         self.assertEqual(c.websites, ['http://www.google.com', 'http://www.mikedoodley.com'])
+        self.assertEqual(c.phone_numbers, [
+            PhoneNumber(phone_number='07979463643', phone_type='Work'),
+            PhoneNumber(phone_number='07979363643', phone_type='Home'),
+            PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
+        ])
         self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
 
         self.assertIsInstance(c.company, Company)
@@ -136,6 +143,11 @@ class TestContact(unittest.TestCase):
         c.description = 'Mike is a great, likeable guy. He always returns my calls.'
         c.emails = ['mike.doodley@gmail.com', 'mike.doodley@yahoo.com']
         c.websites = ['http://www.google.com', 'http://www.mikedoodley.com']
+        c.phone_numbers = [
+            PhoneNumber(phone_number='07979463643', phone_type='Work'),
+            PhoneNumber(phone_number='07979363643', phone_type='Home'),
+            PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
+        ]
         c.tags = ['tag1', 'tag2', 'tag3']
 
         c.company = Company(self.session, key=999, lazy_load=True)
@@ -195,6 +207,11 @@ class TestContact(unittest.TestCase):
         c.description = 'John is very bossy. He even lives on a bossy lane.'
         c.emails = ['john.rowdy@gmail.com', 'john.rowdy@yahoo.com']
         c.websites = ['http://www.johnrowdy.com', 'http://www.yahoo.com']
+        c.phone_numbers = [
+            PhoneNumber(phone_number='+4407979463643', phone_type='Fax'),
+            PhoneNumber(phone_number='+4407979363643', phone_type='Pager'),
+            PhoneNumber(phone_number='+4407979163643', phone_type='Work'),
+        ]
         c.tags = ['othertag1', 'othertag2', 'othertag3']
 
         c.company = Company(self.session, key=456, lazy_load=True)
