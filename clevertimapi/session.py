@@ -139,6 +139,3 @@ class Session(object):
             instance = cls(self, key=key, lazy_load=lazy_load)
             self.instance_cache[cache_key] = instance
         return instance
-
-    def get_all(self, endpoint_name):
-        pass

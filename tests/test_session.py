@@ -43,6 +43,10 @@ class TestSession(unittest.TestCase):
         Session.deregister_endpoint(FakeEndpoint)
 
     def test_is_registered_endpoint(self):
+        self.assertFalse(Session.is_registered_endpoint(FakeEndpoint))
+        self.assertFalse(Session.is_registered_endpoint(SessionError))
+        self.assertFalse(Session.is_registered_endpoint('FakeEndpoint'))
+        self.assertFalse(Session.is_registered_endpoint('SessionError'))
         Session.register_endpoint(SessionError)
         Session.register_endpoint(FakeEndpoint)
         self.assertTrue(Session.is_registered_endpoint(FakeEndpoint))
@@ -51,6 +55,10 @@ class TestSession(unittest.TestCase):
         self.assertTrue(Session.is_registered_endpoint('SessionError'))
         Session.deregister_endpoint(SessionError)
         Session.deregister_endpoint(FakeEndpoint)
+        self.assertFalse(Session.is_registered_endpoint(FakeEndpoint))
+        self.assertFalse(Session.is_registered_endpoint(SessionError))
+        self.assertFalse(Session.is_registered_endpoint('FakeEndpoint'))
+        self.assertFalse(Session.is_registered_endpoint('SessionError'))
 
     def test_get_after_deregister_fails(self):
         session = Session(api_key='APIKEY')
