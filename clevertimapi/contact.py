@@ -47,6 +47,78 @@ class PhoneNumber(ValueSerializer):
         return not self.__eq__(other)
 
 
+class SocialMediaId(ValueSerializer):
+
+    class SOCIAL_MEDIA_VENUES(object):
+        BITBUCKET = 'BitBucket'
+        FACEBOOK = 'Facebook'
+        GITHUB = 'Github'
+        GOOGLEPLUS = 'Google+'
+        INSTAGRAM = 'Instagram'
+        KIK = 'Kik'
+        LINKEDIN = 'LinkedIn'
+        MSN = 'MSN'
+        PINTEREST = 'Pinterest'
+        REDDIT = 'Reddit'
+        SKYPE = 'Skype'
+        SNAPCHAT = 'Snapchat'
+        TELEGRAM = 'Telegram'
+        TWITTER = 'Twitter'
+        WHATSAPP = 'Whatsapp'
+        YOUTUBE = 'YouTube'
+
+        ALL_VALID_VALUES = frozenset((
+            BITBUCKET,
+            FACEBOOK,
+            GITHUB,
+            GOOGLEPLUS,
+            INSTAGRAM,
+            KIK,
+            LINKEDIN,
+            MSN,
+            PINTEREST,
+            REDDIT,
+            SKYPE,
+            SNAPCHAT,
+            TELEGRAM,
+            TWITTER,
+            WHATSAPP,
+            YOUTUBE,
+        ))
+
+        @classmethod
+        def is_valid_social_media_type(cls, value):
+            if value not in cls.ALL_VALID_VALUES:
+                raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
+
+    def __init__(self, content=None, social_media_id=None, social_media_type=None):
+        self._content = {}
+        if content:
+            social_media_id = content.get('smid')
+            social_media_type = content.get('type')
+        if social_media_type is not None:
+            self.social_media_type = social_media_type
+        if social_media_id is not None:
+            self.social_media_id = social_media_id
+
+    social_media_id = make_single_elem_property('smid', string_types, '', 'Social media id')
+    social_media_type = make_single_elem_property('type', string_types, '', 'Social media venue', validate_func=SOCIAL_MEDIA_VENUES.is_valid_social_media_type)
+
+    def serialize(self):
+        social_media_id = self._content.get('smid')
+        if not social_media_id or not isinstance(social_media_id, string_types):
+            raise ValidationError("Invalid social media type.")
+        social_media_type = self._content.get('type')
+        self.SOCIAL_MEDIA_VENUES.is_valid_social_media_type(social_media_type)
+        return self._content
+
+    def __eq__(self, other):
+        return self.social_media_id == other.social_media_id and self.social_media_type == other.social_media_type
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 class Contact(Endpoint):
 
     ENDPOINT = '/contact'
@@ -72,6 +144,7 @@ class Contact(Endpoint):
     emails = make_multi_elem_property('email', string_types, 'Contact\'s list of email addresses')
     websites = make_multi_elem_property('website', string_types, 'Contact\'s list of web sites')
     phone_numbers = make_multi_elem_property('phones', PhoneNumber, 'Contact\'s list of phone numbers', custom_type=PhoneNumber)
+    social_media_ids = make_multi_elem_property('smids', SocialMediaId, 'Contact\'s list of social media ids', custom_type=SocialMediaId)
 
     tags = make_multi_elem_property('tags', string_types, 'List of tags this contact was tagged with.')
 

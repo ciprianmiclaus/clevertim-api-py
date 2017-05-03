@@ -1,5 +1,5 @@
 from clevertimapi.session import Session
-from clevertimapi.company import Company, PhoneNumber
+from clevertimapi.company import Company, PhoneNumber, SocialMediaId
 from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
 from clevertimapi.case import Case
@@ -34,6 +34,7 @@ class TestCompany(unittest.TestCase):
             'email': ['sales@gmail.com', 'support@yahoo.com'],
             'website': ['http://www.clevertim.com', 'http://www.clevertim.org'],
             'phones': [{'no': '07979463643', 'type': 'Work'}, {'no': '07979363643', 'type': 'Home'}, {'no': '07979163643', 'type': 'Mobile'}],
+            'smids': [{'smid': 'mikesp40', 'type': 'Google+'}, {'smid': 'ciprianmiclaus', 'type': 'Github'}, {'smid': 'cippy', 'type': 'Skype'}],
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
@@ -57,6 +58,7 @@ class TestCompany(unittest.TestCase):
             'email': ['support@someltd.com', 'some.ltd@yahoo.com'],
             'website': ['http://www.johnrowdy.com', 'http://www.yahoo.com'],
             'phones': [{'no': '+4407979463643', 'type': 'Fax'}, {'no': '+4407979363643', 'type': 'Pager'}, {'no': '+4407979163643', 'type': 'Work'}],
+            'smids': [{'smid': 'dumbo33', 'type': 'YouTube'}, {'smid': 'miky22', 'type': 'Whatsapp'}],
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
@@ -79,6 +81,11 @@ class TestCompany(unittest.TestCase):
             PhoneNumber(phone_number='07979463643', phone_type='Work'),
             PhoneNumber(phone_number='07979363643', phone_type='Home'),
             PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
+        ])
+        self.assertEqual(c.social_media_ids, [
+            SocialMediaId(social_media_id='mikesp40', social_media_type='Google+'),
+            SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
+            SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ])
         self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
 
@@ -136,6 +143,11 @@ class TestCompany(unittest.TestCase):
             PhoneNumber(phone_number='07979463643', phone_type='Work'),
             PhoneNumber(phone_number='07979363643', phone_type='Home'),
             PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
+        ]
+        c.social_media_ids = [
+            SocialMediaId(social_media_id='mikesp40', social_media_type='Google+'),
+            SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
+            SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ]
         c.tags = ['tag1', 'tag2', 'tag3']
 
@@ -195,6 +207,10 @@ class TestCompany(unittest.TestCase):
             PhoneNumber(phone_number='+4407979463643', phone_type='Fax'),
             PhoneNumber(phone_number='+4407979363643', phone_type='Pager'),
             PhoneNumber(phone_number='+4407979163643', phone_type='Work'),
+        ]
+        c.social_media_ids = [
+            SocialMediaId(social_media_id='dumbo33', social_media_type='YouTube'),
+            SocialMediaId(social_media_id='miky22', social_media_type='Whatsapp'),
         ]
         c.tags = ['othertag1', 'othertag2', 'othertag3']
 
