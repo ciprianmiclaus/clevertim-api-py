@@ -5,6 +5,20 @@ from .session import Session
 
 class PhoneNumber(ValueSerializer):
 
+    class PHONE_TYPES(object):
+        WORK = 'Work'
+        HOME = 'Home'
+        MOBILE = 'Mobile'
+        FAX = 'Fax'
+        PAGER = 'Pager'
+
+        ALL_VALID_VALUES = frozenset((WORK, HOME, MOBILE, FAX, PAGER))
+
+        @classmethod
+        def is_valid_phone_type(cls, value):
+            if value not in cls.ALL_VALID_VALUES:
+                raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
+
     def __init__(self, content=None, phone_number=None, phone_type=None):
         self._content = {}
         if content:
@@ -15,21 +29,17 @@ class PhoneNumber(ValueSerializer):
         if phone_number is not None:
             self.phone_number = phone_number
 
-    @staticmethod
-    def is_valid_phone_type(value):
-        valid_values = ('Work', 'Home', 'Mobile', 'Fax', 'Pager')
-        if value not in valid_values:
-            raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(valid_values)))
+
 
     phone_number = make_single_elem_property('no', string_types, '', 'Phone number')
-    phone_type = make_single_elem_property('type', string_types, '', 'Phone type: Work, Home, Mobile, Fax or Pager', validate_func=is_valid_phone_type.__func__)
+    phone_type = make_single_elem_property('type', string_types, '', 'Phone type: Work, Home, Mobile, Fax or Pager', validate_func=PHONE_TYPES.is_valid_phone_type)
 
     def serialize(self):
         no = self._content.get('no')
         if not no or not isinstance(no, string_types):
             raise ValidationError("Invalid phone number.")
         phone_type = self._content.get('type')
-        self.is_valid_phone_type(phone_type)
+        self.PHONE_TYPES.is_valid_phone_type(phone_type)
         return self._content
 
     def __eq__(self, other):
