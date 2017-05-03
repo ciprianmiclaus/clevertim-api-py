@@ -29,8 +29,6 @@ class PhoneNumber(ValueSerializer):
         if phone_number is not None:
             self.phone_number = phone_number
 
-
-
     phone_number = make_single_elem_property('no', string_types, '', 'Phone number')
     phone_type = make_single_elem_property('type', string_types, '', 'Phone type: Work, Home, Mobile, Fax or Pager', validate_func=PHONE_TYPES.is_valid_phone_type)
 
