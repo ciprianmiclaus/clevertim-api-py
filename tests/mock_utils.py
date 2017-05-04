@@ -8,7 +8,7 @@ except ImportError:
 def setup_requests_call_mock(requestsMockObj, config):
     def requests_call(*args, **kwargs):
         url = args[0]
-        for endpoint, (status_code, response_text) in config.iteritems():
+        for endpoint, (status_code, response_text) in config.items():
             if url == Session.build_url(Session.ENDPOINT_URL, endpoint):
                 mock_response = mock.Mock()
                 mock_response.status_code = status_code

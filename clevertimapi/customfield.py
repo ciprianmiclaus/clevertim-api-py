@@ -75,7 +75,7 @@ class CustomFieldValueBase(ValueSerializer):
 
     def __init__(self, content=None, custom_field=None, custom_field_value=None, session=None):
         if content:
-            keys = content.keys()
+            keys = list(content)
             assert len(keys) == 1, "Invalid CustomFieldValue content: %s" % (content,)
             key = keys[0]
             custom_field = CustomField(session, key=key, lazy_load=True)
@@ -157,7 +157,7 @@ class CustomFieldValueBase(ValueSerializer):
         return {self._custom_field.key: self._transform_value()}
 
     def __eq__(self, other):
-        return self.phone_number == other.phone_number and self.phone_type == other.phone_type
+        return self._custom_field.key == other._custom_field.key and self._custom_field_value == other._custom_field_value
 
     def __ne__(self, other):
         return not self.__eq__(other)
