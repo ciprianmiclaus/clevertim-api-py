@@ -1,7 +1,7 @@
 from .compat import string_types
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_single_elem_ref_property, make_multi_elem_ref_property, ValueSerializer, ValidationError
 from .session import Session
-from .customfield import ContactCustomFieldValue
+from .customfield import CustomFieldValueCollection
 
 
 class PhoneNumber(ValueSerializer):
@@ -155,7 +155,7 @@ class Contact(Endpoint):
 
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this contact')
 
-    custom_field_values = make_multi_elem_property('cf', ContactCustomFieldValue, 'Contact\'s list of custom field values', custom_type=ContactCustomFieldValue)
+    custom_field_values = make_single_elem_property('cf', CustomFieldValueCollection, {}, 'Contact\'s list of custom field values', custom_type=CustomFieldValueCollection)
 
     @property
     def last_contacted(self):

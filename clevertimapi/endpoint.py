@@ -9,10 +9,18 @@ class ValueSerializer(object):
         """Custom serialize a value."""
 
 
-def _single_attr_get(attr_name, default=None):
+def _single_attr_get(attr_name, default=None, custom_type=None):
     def _get(self):
         self._check_needs_loading()
-        return self._content.get(attr_name, default)
+        ret = self._content.setdefault(attr_name, default)
+        if ret is not None:
+            if custom_type:
+                inst = self._cached_instances.get(attr_name)
+                if inst is None:
+                    inst = custom_type(content=ret, session=self.session)
+                    self._cached_instances[attr_name] = inst
+                ret = inst
+            return ret
     return _get
 
 
@@ -56,8 +64,13 @@ def _multi_attr_set(attr_name, list_elem_type, validate_func=None):
     return _set
 
 
-def make_single_elem_property(attr_name, elem_type, default=None, doc_string='', validate_func=None):
-    return property(_single_attr_get(attr_name, default), _single_attr_set(attr_name, elem_type, validate_func=validate_func), _attr_del(attr_name), doc_string)
+def make_single_elem_property(attr_name, elem_type, default=None, doc_string='', validate_func=None, custom_type=None, readonly=False):
+    return property(
+        _single_attr_get(attr_name, default, custom_type=custom_type),
+        None if readonly else _single_attr_set(attr_name, elem_type, validate_func=validate_func),
+        None if readonly else _attr_del(attr_name),
+        doc_string
+    )
 
 
 def make_multi_elem_property(attr_name, elem_type, doc_string='', validate_func=None, custom_type=None, readonly=False):
@@ -149,8 +162,11 @@ class Endpoint(object):
         lazy_load - when True, the instance is only loaded from the server on the first property access
         """
         self.session = session
+        if key is not None:
+            key = int(key)
         self._key = key
         self._loaded = False
+        self._cached_instances = {}
         if content is not None:
             self._content = content
         elif self.key and not lazy_load:

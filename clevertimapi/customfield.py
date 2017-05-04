@@ -78,6 +78,7 @@ class CustomFieldValueBase(ValueSerializer):
             keys = list(content)
             assert len(keys) == 1, "Invalid CustomFieldValue content: %s" % (content,)
             key = keys[0]
+            assert isinstance(key, int)
             custom_field = CustomField(session, key=key, lazy_load=True)
             custom_field_value = content[key]
         self._custom_field = custom_field
@@ -117,7 +118,7 @@ class CustomFieldValueBase(ValueSerializer):
         }
 
     def _check_expected_single_value_type(self, value):
-        expected_types = self.EXPECTED_VALUE_TYPES[self._custom_field.field_type]
+        expected_types = self._get_expected_value_types()[self._custom_field.field_type]
         if not isinstance(value, expected_types):
             raise ValidationError("Incorrect value of type '%s'. Expected type(s): '%s'" % (type(value), expected_types))
 
@@ -163,20 +164,62 @@ class CustomFieldValueBase(ValueSerializer):
         return not self.__eq__(other)
 
 
-class ContactCustomFieldValue(CustomFieldValueBase):
-    pass
+class CustomFieldValueCollection(ValueSerializer):
+    def __init__(self, content=None, custom_field=None, custom_field_value=None, session=None):
+        self.session = session
+        self._cf_by_id = {}
+        # self._cf_by_name = {}
+        self._content = content or {}
+        if content:
+            print "content:", content
+            for cf_id, cf_val in content.items():
+                cf_id = int(cf_id)
+                val = CustomFieldValueBase(
+                    custom_field=CustomField(session, key=cf_id, lazy_load=True),
+                    custom_field_value=cf_val
+                )
+                self._cf_by_id[cf_id] = val
 
+    def serialize(self):
+        ret = {}
+        for cf_id, cf_val in self._cf_by_id.items():
+            ret.update(
+                cf_val.serialize()
+            )
+        return ret
 
-class CompanyCustomFieldValue(CustomFieldValueBase):
-    pass
+    def __iter__(self):
+        for cfv in self._cf_by_id.values():
+            yield cfv
 
+    def __getitem__(self, arg):
+        if isinstance(arg, CustomField):
+            assert arg.key is not None, "CustomField instance is not saved"
+            return self._cf_by_id[arg.key]
+        # elif isinstance(arg, string_types):
+        #    return self._cf_by_name[arg]
+        return self._cf_by_id[arg]
 
-class CaseCustomFieldValue(CustomFieldValueBase):
-    pass
+    def __setitem__(self, arg, value):
+        if isinstance(arg, CustomField):
+            assert arg.key is not None, "CustomField instance is not saved"
+            self._cf_by_id[arg.key] = CustomFieldValueBase(
+                custom_field=arg,
+                custom_field_value=value
+            )
+            self._content.update(self._cf_by_id[arg.key].serialize())
+        else:
+            self._cf_by_id[arg] = CustomFieldValueBase(
+                custom_field=CustomField(self.session, key=arg, lazy_load=True),
+                custom_field_value=value
+            )
+            self._content.update(self._cf_by_id[arg].serialize())
 
-
-class OpportunityCustomFieldValue(CustomFieldValueBase):
-    pass
+    def get(self, arg, default=None):
+        try:
+            return self[arg]
+        except KeyError:
+            return default
 
 
 Session.register_endpoint(CustomField)

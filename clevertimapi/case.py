@@ -1,7 +1,7 @@
 from .compat import string_types
 from .session import Session
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property, make_single_elem_ref_property
-from .customfield import CaseCustomFieldValue
+# from .customfield import CaseCustomFieldValue
 
 
 class Case(Endpoint):
@@ -17,7 +17,7 @@ class Case(Endpoint):
     tasks = make_multi_elem_ref_property('tasks', 'Task', 'List of tasks for this case')
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this case')
 
-    custom_field_values = make_multi_elem_property('cf', CaseCustomFieldValue, 'Case\'s list of custom field values', custom_type=CaseCustomFieldValue)
+    # custom_field_values = make_multi_elem_property('cf', CaseCustomFieldValue, 'Case\'s list of custom field values', custom_type=CaseCustomFieldValue)
 
 
 Session.register_endpoint(Case)

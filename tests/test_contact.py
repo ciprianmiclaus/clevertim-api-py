@@ -4,7 +4,7 @@ from clevertimapi.company import Company
 from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
 from clevertimapi.case import Case
-# from clevertimapi.customfield import ContactCustomFieldValue
+from clevertimapi.customfield import CustomField, CustomFieldValueBase
 from copy import deepcopy
 from mock_utils import setup_requests_call_mock
 import json
@@ -41,7 +41,7 @@ class TestContact(unittest.TestCase):
             'website': ['http://www.google.com', 'http://www.mikedoodley.com'],
             'phones': [{'no': '07979463643', 'type': 'Work'}, {'no': '07979363643', 'type': 'Home'}, {'no': '07979163643', 'type': 'Mobile'}],
             'smids': [{'smid': 'mikesp40', 'type': 'Google+'}, {'smid': 'ciprianmiclaus', 'type': 'Github'}, {'smid': 'cippy', 'type': 'Skype'}],
-            # 'cf': {1: "test"},
+            'cf': {'1': "test"},
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
@@ -69,7 +69,7 @@ class TestContact(unittest.TestCase):
             'website': ['http://www.johnrowdy.com', 'http://www.yahoo.com'],
             'phones': [{'no': '+4407979463643', 'type': 'Fax'}, {'no': '+4407979363643', 'type': 'Pager'}, {'no': '+4407979163643', 'type': 'Work'}],
             'smids': [{'smid': 'dumbo33', 'type': 'YouTube'}, {'smid': 'miky22', 'type': 'Whatsapp'}],
-            # 'cf': {1: "test"},
+            'cf': {'1': "test2"},
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
@@ -100,9 +100,9 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ])
-        # self.assertEqual(c.custom_field_values, [
-        #    ContactCustomFieldValue(custom_field=CustomField(self.session, key=1, lazy_load=True), custom_field_value="test")
-        # ])
+        self.assertEqual(list(c.custom_field_values), [
+            CustomFieldValueBase(custom_field=CustomField(self.session, key=1, lazy_load=True), custom_field_value="test")
+        ])
         self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
 
         self.assertIsInstance(c.company, Company)
@@ -128,6 +128,21 @@ class TestContact(unittest.TestCase):
                         self.contact1_ret
                     ]
                 })
+            ),
+            '/customfield/1': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [{
+                        'id': 1,
+                        'name': 'Input Custom Field',
+                        'fullname': 'Input Custom Field',
+                        'elemType': 'input',
+                        'modelType': ['customers', 'companies'],
+                        'multiple': False,
+                        'app': None
+                    }]
+                })
             )
         })
 
@@ -136,7 +151,25 @@ class TestContact(unittest.TestCase):
         self._compare_against_contact1_ret(c)
 
     @mock.patch('requests.post')
-    def test_add_new_contact(self, mockRequestsPOST):
+    @mock.patch('requests.get')
+    def test_add_new_contact(self, mockRequestsGET, mockRequestsPOST):
+        setup_requests_call_mock(mockRequestsGET, {
+            '/customfield/1': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [{
+                        'id': 1,
+                        'name': 'Input Custom Field',
+                        'fullname': 'Input Custom Field',
+                        'elemType': 'input',
+                        'modelType': ['customers', 'companies'],
+                        'multiple': False,
+                        'app': None
+                    }]
+                })
+            )
+        })
         setup_requests_call_mock(mockRequestsPOST, {
             '/contact': (
                 200,
@@ -171,6 +204,11 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ]
+        print c._content
+        c.custom_field_values[1] = "test"
+        print c.custom_field_values._content
+        print c._content
+
         c.tags = ['tag1', 'tag2', 'tag3']
 
         c.company = Company(self.session, key=999, lazy_load=True)
@@ -204,6 +242,21 @@ class TestContact(unittest.TestCase):
                     'content': [
                         self.contact1_ret
                     ]
+                })
+            ),
+            '/customfield/1': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [{
+                        'id': 1,
+                        'name': 'Input Custom Field',
+                        'fullname': 'Input Custom Field',
+                        'elemType': 'input',
+                        'modelType': ['customers', 'companies'],
+                        'multiple': False,
+                        'app': None
+                    }]
                 })
             )
         })
@@ -243,6 +296,7 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='dumbo33', social_media_type='YouTube'),
             SocialMediaId(social_media_id='miky22', social_media_type='Whatsapp'),
         ]
+        c.custom_field_values[1] = "test2"
         c.tags = ['othertag1', 'othertag2', 'othertag3']
 
         c.company = Company(self.session, key=456, lazy_load=True)
