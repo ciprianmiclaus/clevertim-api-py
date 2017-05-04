@@ -1,6 +1,7 @@
 from clevertimapi.endpoint import Endpoint
 from clevertimapi.session import Session
 import json
+from mock_utils import setup_requests_call_mock
 try:
     import unittest.mock as mock
 except ImportError:
@@ -17,6 +18,9 @@ class TestEndpoint(unittest.TestCase):
     def setUp(self):
         self.session = Session('API_KEY')
 
+        # just so we can test with this class
+        Endpoint.ENDPOINT = '/fake'
+
         self.payload = {
             'status': 'OK',
             'content': [{
@@ -27,19 +31,19 @@ class TestEndpoint(unittest.TestCase):
             }]
         }
 
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps(self.payload, separators=(',', ':'))
+    def _setup_GET_mock(self, key):
+        self.payload['content'][0]['id'] = key
 
-        # just so we can test with this class
-        Endpoint.ENDPOINT = '/fake'
-
-        self.mockRequestsGET = mock.patch('requests.get', return_value=response).start()
+        self.mockRequestsGET = mock.patch('requests.get').start()
+        setup_requests_call_mock(self.mockRequestsGET, {
+            '/fake/%s' % key: (200, json.dumps(self.payload, separators=(',', ':')))
+        })
 
     def tearDown(self):
         mock.patch.stopall()
 
     def test_lazy_load_loads_on_first_property(self):
+        self._setup_GET_mock(1234)
         endpoint = Endpoint(self.session, key=1234, lazy_load=True)
         self.assertFalse(endpoint.is_new())
         self.assertEqual(self.mockRequestsGET.call_count, 0)
@@ -52,6 +56,7 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(self.mockRequestsGET.call_count, 1)
 
     def test_unlazy_load_loads_in_init(self):
+        self._setup_GET_mock(1234)
         endpoint = Endpoint(self.session, key=1234, lazy_load=False)
         self.assertFalse(endpoint.is_new())
         self.assertEqual(self.mockRequestsGET.call_count, 1)
@@ -62,6 +67,7 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(self.mockRequestsGET.call_count, 1)
 
     def test_lazy_load_reload(self):
+        self._setup_GET_mock(1234)
         endpoint = Endpoint(self.session, key=1234, lazy_load=True)
         self.assertFalse(endpoint.is_new())
         self.assertEqual(self.mockRequestsGET.call_count, 0)
@@ -76,6 +82,7 @@ class TestEndpoint(unittest.TestCase):
         self.assertEqual(self.mockRequestsGET.call_count, 1)
 
     def test_unlazy_load_reload(self):
+        self._setup_GET_mock(1234)
         endpoint = Endpoint(self.session, key=1234, lazy_load=False)
         self.assertFalse(endpoint.is_new())
         self.assertEqual(self.mockRequestsGET.call_count, 1)
@@ -106,29 +113,27 @@ class TestEndpoint(unittest.TestCase):
             getattr(endpoint, prop)
             endpoint2 = Endpoint(self.session, lazy_load=False)
             getattr(endpoint2, prop)
-            self.assertEqual(self.mockRequestsGET.call_count, 0)
 
     def test_lazy_instance_loads_on_any_first_property_except_key(self):
         properties = [prop for prop in dir(Endpoint) if isinstance(getattr(Endpoint, prop), property)]
-        cumulative_get_calls = 0
         key = 123
         for prop in properties:
+            self._setup_GET_mock(key)
             endpoint = Endpoint(self.session, key=key, lazy_load=True)
-            self.assertEqual(self.mockRequestsGET.call_count, cumulative_get_calls)
+            self.assertEqual(self.mockRequestsGET.call_count, 0)
             getattr(endpoint, prop)
             if prop == 'key':
-                self.assertEqual(self.mockRequestsGET.call_count, cumulative_get_calls)
+                self.assertEqual(self.mockRequestsGET.call_count, 0)
             else:
-                cumulative_get_calls += 1
-                self.assertEqual(self.mockRequestsGET.call_count, cumulative_get_calls)
+                self.assertEqual(self.mockRequestsGET.call_count, 1)
             key += 1
 
     @mock.patch('requests.put')
     def test_save_existing_endpoint(self, mockRequestsPUT):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps(self.payload)
-        mockRequestsPUT.return_value = response
+        self._setup_GET_mock(6789)
+        setup_requests_call_mock(mockRequestsPUT, {
+            '/fake/6789': (200, json.dumps(self.payload))
+        })
 
         endpoint = Endpoint(self.session, key=6789, lazy_load=False)
         endpoint.save()
@@ -141,10 +146,9 @@ class TestEndpoint(unittest.TestCase):
 
     @mock.patch('requests.post')
     def test_save_new_endpoint(self, mockRequestsPOST):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps(self.payload)
-        mockRequestsPOST.return_value = response
+        setup_requests_call_mock(mockRequestsPOST, {
+            '/fake': (200, json.dumps(self.payload))
+        })
 
         endpoint = Endpoint(self.session)
         self.assertTrue(endpoint.is_new())
@@ -161,10 +165,10 @@ class TestEndpoint(unittest.TestCase):
 
     @mock.patch('requests.delete')
     def test_delete_unlazy_loaded_endpoint(self, mockRequestsDELETE):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps(self.payload)
-        mockRequestsDELETE.return_value = response
+        self._setup_GET_mock(6789)
+        setup_requests_call_mock(mockRequestsDELETE, {
+            '/fake/6789': (200, json.dumps(self.payload))
+        })
 
         endpoint = Endpoint(self.session, key=6789, lazy_load=False)
         endpoint.delete()
@@ -174,13 +178,11 @@ class TestEndpoint(unittest.TestCase):
 
     @mock.patch('requests.delete')
     def test_delete_lazy_loaded_endpoint(self, mockRequestsDELETE):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps(self.payload)
-        mockRequestsDELETE.return_value = response
+        setup_requests_call_mock(mockRequestsDELETE, {
+            '/fake/6789': (200, json.dumps(self.payload))
+        })
 
         endpoint = Endpoint(self.session, key=6789, lazy_load=True)
         endpoint.delete()
 
         mockRequestsDELETE.assert_called_once_with(Session.ENDPOINT_URL + Endpoint.ENDPOINT + '/6789', headers=mock.ANY)
-        self.assertEqual(self.mockRequestsGET.call_count, 0)

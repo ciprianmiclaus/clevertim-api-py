@@ -4,7 +4,9 @@ from clevertimapi.company import Company
 from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
 from clevertimapi.case import Case
+# from clevertimapi.customfield import ContactCustomFieldValue
 from copy import deepcopy
+from mock_utils import setup_requests_call_mock
 import json
 try:
     import unittest.mock as mock
@@ -39,6 +41,7 @@ class TestContact(unittest.TestCase):
             'website': ['http://www.google.com', 'http://www.mikedoodley.com'],
             'phones': [{'no': '07979463643', 'type': 'Work'}, {'no': '07979363643', 'type': 'Home'}, {'no': '07979163643', 'type': 'Mobile'}],
             'smids': [{'smid': 'mikesp40', 'type': 'Google+'}, {'smid': 'ciprianmiclaus', 'type': 'Github'}, {'smid': 'cippy', 'type': 'Skype'}],
+            # 'cf': {1: "test"},
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
@@ -66,6 +69,7 @@ class TestContact(unittest.TestCase):
             'website': ['http://www.johnrowdy.com', 'http://www.yahoo.com'],
             'phones': [{'no': '+4407979463643', 'type': 'Fax'}, {'no': '+4407979363643', 'type': 'Pager'}, {'no': '+4407979163643', 'type': 'Work'}],
             'smids': [{'smid': 'dumbo33', 'type': 'YouTube'}, {'smid': 'miky22', 'type': 'Whatsapp'}],
+            # 'cf': {1: "test"},
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
@@ -96,6 +100,9 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ])
+        # self.assertEqual(c.custom_field_values, [
+        #    ContactCustomFieldValue(custom_field=CustomField(self.session, key=1, lazy_load=True), custom_field_value="test")
+        # ])
         self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
 
         self.assertIsInstance(c.company, Company)
@@ -112,15 +119,17 @@ class TestContact(unittest.TestCase):
 
     @mock.patch('requests.get')
     def test_load_contact(self, mockRequestsGET):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                self.contact1_ret
-            ]
+        setup_requests_call_mock(mockRequestsGET, {
+            '/contact/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.contact1_ret
+                    ]
+                })
+            )
         })
-        mockRequestsGET.return_value = response
 
         c = Contact(self.session, key=445)
         self.assertFalse(c.is_new())
@@ -128,15 +137,17 @@ class TestContact(unittest.TestCase):
 
     @mock.patch('requests.post')
     def test_add_new_contact(self, mockRequestsPOST):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                self.contact1_ret
-            ]
+        setup_requests_call_mock(mockRequestsPOST, {
+            '/contact': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.contact1_ret
+                    ]
+                })
+            )
         })
-        mockRequestsPOST.return_value = response
 
         c = Contact(self.session)
         c.first_name = 'Mike'
@@ -185,27 +196,31 @@ class TestContact(unittest.TestCase):
     @mock.patch('requests.put')
     @mock.patch('requests.get')
     def test_edit_existing_contact(self, mockRequestsGET, mockRequestsPUT):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                self.contact1_ret
-            ]
+        setup_requests_call_mock(mockRequestsGET, {
+            '/contact/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.contact1_ret
+                    ]
+                })
+            )
         })
-        mockRequestsGET.return_value = response
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                {
-                    'id': 445,
-                    'lc': '2017-01-02T05:22:12Z',
-                }
-            ]
+        setup_requests_call_mock(mockRequestsPUT, {
+            '/contact/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        {
+                            'id': 445,
+                            'lc': '2017-01-02T05:22:12Z',
+                        }
+                    ]
+                })
+            )
         })
-        mockRequestsPUT.return_value = response
 
         c = Contact(self.session, key=445)
         c.first_name = 'John'

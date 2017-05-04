@@ -49,14 +49,17 @@ class Session(object):
             return ret in cls.ENDPOINT_FACTORY
         return False
 
-    def _get_url(self, endpoint, resource_id=None):
-        url = self.endpoint_url
+    @staticmethod
+    def build_url(url, endpoint, resource_id=None):
         if not endpoint.startswith('/'):
             url += '/'
         url += endpoint.rstrip('/')
         if resource_id:
             url += '/' + str(resource_id)
         return url
+
+    def _get_url(self, endpoint, resource_id=None):
+        return self.build_url(self.endpoint_url, endpoint, resource_id=resource_id)
 
     def _get_cache_key(self, endpoint, resource_id):
         return '%s%s' % (endpoint, resource_id)

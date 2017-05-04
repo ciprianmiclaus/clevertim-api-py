@@ -4,6 +4,7 @@ from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
 from clevertimapi.case import Case
 from copy import deepcopy
+from mock_utils import setup_requests_call_mock
 import json
 try:
     import unittest.mock as mock
@@ -100,15 +101,17 @@ class TestCompany(unittest.TestCase):
 
     @mock.patch('requests.get')
     def test_load_company(self, mockRequestsGET):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                self.company1_ret
-            ]
+        setup_requests_call_mock(mockRequestsGET, {
+            '/company/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.company1_ret
+                    ]
+                })
+            )
         })
-        mockRequestsGET.return_value = response
 
         c = Company(self.session, key=445)
         self.assertFalse(c.is_new())
@@ -116,18 +119,17 @@ class TestCompany(unittest.TestCase):
 
     @mock.patch('requests.post')
     def test_add_new_company(self, mockRequestsPOST):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                {
-                    'id': 445,
-                    'lc': '2017-01-02T05:22:12Z',
-                }
-            ]
+        setup_requests_call_mock(mockRequestsPOST, {
+            '/company': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.company1_ret
+                    ]
+                })
+            )
         })
-        mockRequestsPOST.return_value = response
 
         c = Company(self.session)
         c.name = 'Clevertim Ltd.'
@@ -172,26 +174,31 @@ class TestCompany(unittest.TestCase):
     @mock.patch('requests.put')
     @mock.patch('requests.get')
     def test_edit_existing_company(self, mockRequestsGET, mockRequestsPUT):
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                self.company1_ret
-            ]
+        setup_requests_call_mock(mockRequestsGET, {
+            '/company/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.company1_ret
+                    ]
+                })
+            )
         })
-        mockRequestsGET.return_value = response
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({
-            'status': 'OK',
-            'content': [
-                {
-                    'id': 445
-                }
-            ]
+        setup_requests_call_mock(mockRequestsPUT, {
+            '/company/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        {
+                            'id': 445,
+                            'lc': '2017-01-02T05:22:12Z',
+                        }
+                    ]
+                })
+            )
         })
-        mockRequestsPUT.return_value = response
 
         c = Company(self.session, key=445)
         c.name = 'Some Ltd.'
