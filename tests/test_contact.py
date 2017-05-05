@@ -204,10 +204,7 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ]
-        print c._content
         c.custom_field_values[1] = "test"
-        print c.custom_field_values._content
-        print c._content
 
         c.tags = ['tag1', 'tag2', 'tag3']
 

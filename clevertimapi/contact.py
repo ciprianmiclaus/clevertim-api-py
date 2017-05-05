@@ -125,7 +125,8 @@ class Contact(Endpoint):
     ENDPOINT = '/contact'
 
     DEFAULTS = {
-        'is_company': False
+        'is_company': False,
+        'cf': {}
     }
 
     first_name = make_single_elem_property('fn', string_types, '', 'Contact\'s first name')

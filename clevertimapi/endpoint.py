@@ -12,7 +12,7 @@ class ValueSerializer(object):
 def _single_attr_get(attr_name, default=None, custom_type=None):
     def _get(self):
         self._check_needs_loading()
-        ret = self._content.setdefault(attr_name, default)
+        ret = self._content.get(attr_name, default)
         if ret is not None:
             if custom_type:
                 inst = self._cached_instances.get(attr_name)

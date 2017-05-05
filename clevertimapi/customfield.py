@@ -169,9 +169,8 @@ class CustomFieldValueCollection(ValueSerializer):
         self.session = session
         self._cf_by_id = {}
         # self._cf_by_name = {}
-        self._content = content or {}
+        self._content = content
         if content:
-            print "content:", content
             for cf_id, cf_val in content.items():
                 cf_id = int(cf_id)
                 val = CustomFieldValueBase(
