@@ -71,7 +71,7 @@ class CustomField(Endpoint):
             raise ValidationError("A select custom field needs to specify the allowed_values property.")
 
 
-class CustomFieldValueBase(ValueSerializer):
+class CustomFieldValue(ValueSerializer):
 
     def __init__(self, content=None, custom_field=None, custom_field_value=None, session=None):
         if content:
@@ -105,7 +105,7 @@ class CustomFieldValueBase(ValueSerializer):
         return {
             CustomField.FIELD_TYPE.INPUT: string_types,
             CustomField.FIELD_TYPE.SELECT: string_types,
-            CustomField.FIELD_TYPE.DATE: datetime.date,
+            CustomField.FIELD_TYPE.DATE: (datetime.date, string_types),
             CustomField.FIELD_TYPE.USER: User,
             CustomField.FIELD_TYPE.COUNTRY: string_types,
             CustomField.FIELD_TYPE.STATE: string_types,
@@ -143,7 +143,14 @@ class CustomFieldValueBase(ValueSerializer):
                 for val in value:
                     _validate_select_value(val)
             else:
-                _validate_select_value(val)
+                _validate_select_value(value)
+        elif field_type == CustomField.FIELD_TYPE.DATE:
+            if isinstance(value, string_types):
+                try:
+                    dt = datetime.datetime.strptime(value, '%Y-%m-%d')
+                except ValueError:
+                    raise ValidationError("Incorrect value '%s' for a DATE custom field. Expected a YYYY-MM-DD formatted string or a datetime.date" % (value,))
+                value = dt.strftime('%Y-%m-%d')
         return value
 
     def _transform_value(self):
@@ -158,37 +165,47 @@ class CustomFieldValueBase(ValueSerializer):
         return {self._custom_field.key: self._transform_value()}
 
     def __eq__(self, other):
-        return self._custom_field.key == other._custom_field.key and self._custom_field_value == other._custom_field_value
+        return self._custom_field.key == other._custom_field.key and self._transform_value() == other._transform_value()
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __repr__(self):
+        return '%s' % (self.serialize(),)
+
 
 class CustomFieldValueCollection(ValueSerializer):
     def __init__(self, content=None, custom_field=None, custom_field_value=None, session=None):
-        self.session = session
         self._cf_by_id = {}
         # self._cf_by_name = {}
-        self._content = content
-        if content:
+        if content is not None:
+            assert isinstance(content, dict) and isinstance(session, Session) and custom_field is None and custom_field_value is None
+            self._content = content
+            self.session = session
             for cf_id, cf_val in content.items():
                 cf_id_int = int(cf_id)
                 if cf_id_int != cf_id:
                     del self._content[cf_id]
                     self._content[cf_id_int] = cf_val
-                val = CustomFieldValueBase(
-                    custom_field=CustomField(session, key=cf_id_int, lazy_load=True),
+                cf = CustomField(session, key=cf_id_int, lazy_load=True)
+                self._assert_custom_field_scope(cf)
+                val = CustomFieldValue(
+                    custom_field=cf,
                     custom_field_value=cf_val
                 )
                 self._cf_by_id[cf_id_int] = val
+        else:
+            assert content is None and session is None and isinstance(custom_field, CustomField)
+            self._content = {}
+            self[custom_field] = custom_field_value
+
+    def _assert_custom_field_scope(self, custom_field):
+        cf_type = getattr(self, 'CUSTOM_FIELD_SCOPE', None)
+        if cf_type is not None:
+            assert cf_type in custom_field.field_scope
 
     def serialize(self):
-        ret = {}
-        for cf_id, cf_val in self._cf_by_id.items():
-            ret.update(
-                cf_val.serialize()
-            )
-        return ret
+        return self._content
 
     def __iter__(self):
         for cfv in self._cf_by_id.values():
@@ -205,23 +222,44 @@ class CustomFieldValueCollection(ValueSerializer):
     def __setitem__(self, arg, value):
         if isinstance(arg, CustomField):
             assert arg.key is not None, "CustomField instance is not saved"
-            self._cf_by_id[arg.key] = CustomFieldValueBase(
+            key = arg.key
+            self._assert_custom_field_scope(arg)
+            val = CustomFieldValue(
                 custom_field=arg,
                 custom_field_value=value
             )
-            self._content.update(self._cf_by_id[arg.key].serialize())
         else:
-            self._cf_by_id[arg] = CustomFieldValueBase(
-                custom_field=CustomField(self.session, key=arg, lazy_load=True),
+            key = arg
+            cf = CustomField(self.session, key=arg, lazy_load=True)
+            self._assert_custom_field_scope(cf)
+            val = CustomFieldValue(
+                custom_field=cf,
                 custom_field_value=value
             )
-            self._content.update(self._cf_by_id[arg].serialize())
+        self._cf_by_id[key] = val
+        self._content.update(val.serialize())
 
     def get(self, arg, default=None):
         try:
             return self[arg]
         except KeyError:
             return default
+
+
+class ContactsCustomFieldValueCollection(CustomFieldValueCollection):
+    CUSTOM_FIELD_SCOPE = CustomField.FIELD_SCOPE.CONTACTS
+
+
+class CompaniesCustomFieldValueCollection(CustomFieldValueCollection):
+    CUSTOM_FIELD_SCOPE = CustomField.FIELD_SCOPE.COMPANIES
+
+
+class CasesCustomFieldValueCollection(CustomFieldValueCollection):
+    CUSTOM_FIELD_SCOPE = CustomField.FIELD_SCOPE.CASES
+
+
+class OpportunitiesCustomFieldValueCollection(CustomFieldValueCollection):
+    CUSTOM_FIELD_SCOPE = CustomField.FIELD_SCOPE.OPPORTUNITIES
 
 
 Session.register_endpoint(CustomField)

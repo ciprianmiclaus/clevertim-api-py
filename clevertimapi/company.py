@@ -2,7 +2,7 @@ from .compat import string_types
 from .contact import PhoneNumber, SocialMediaId
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property
 from .session import Session
-from .customfield import CustomFieldValueCollection
+from .customfield import CompaniesCustomFieldValueCollection
 
 
 class Company(Endpoint):
@@ -36,7 +36,10 @@ class Company(Endpoint):
 
     notes = make_multi_elem_ref_property('notes', 'Note', 'List of notes for this company')
 
-    custom_field_values = make_single_elem_property('cf', CustomFieldValueCollection, {}, 'Company\'s list of custom field values', custom_type=CustomFieldValueCollection)
+    files = make_multi_elem_ref_property('files', 'File', 'List of files for this contact')
+    linked_files = make_multi_elem_ref_property('lfiles', 'LinkedFile', 'List of linked files for this contact')
+
+    custom_field_values = make_single_elem_property('cf', CompaniesCustomFieldValueCollection, {}, 'Company\'s list of custom field values', custom_type=CompaniesCustomFieldValueCollection)
 
     @property
     def last_contacted(self):

@@ -4,9 +4,11 @@ from clevertimapi.company import Company
 from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
 from clevertimapi.case import Case
-from clevertimapi.customfield import CustomField, CustomFieldValueBase
+from clevertimapi.customfield import CustomField, CustomFieldValue
+from clevertimapi.file import File, LinkedFile
 from copy import deepcopy
-from mock_utils import setup_requests_call_mock
+import datetime
+from mock_utils import setup_requests_call_mock, set_up_GET_custom_fields
 import json
 try:
     import unittest.mock as mock
@@ -41,11 +43,13 @@ class TestContact(unittest.TestCase):
             'website': ['http://www.google.com', 'http://www.mikedoodley.com'],
             'phones': [{'no': '07979463643', 'type': 'Work'}, {'no': '07979363643', 'type': 'Home'}, {'no': '07979163643', 'type': 'Mobile'}],
             'smids': [{'smid': 'mikesp40', 'type': 'Google+'}, {'smid': 'ciprianmiclaus', 'type': 'Github'}, {'smid': 'cippy', 'type': 'Skype'}],
-            'cf': {'1': "test"},
+            'cf': {'1': 'test', '2': 'cf_value2', '3': '2017-05-22', '4': 'US', '5': 'CA', '6': 'US-CA', '7': 'USD'},
             'tags': ['tag1', 'tag2', 'tag3'],
             'tasks': [1, 2],
             'opportunities': [100, 101, 211],
             'cases': [55, 57],
+            'files': [22, 34],
+            'lfiles': [120, 330, 454],
         }
         self.contact1_ret = deepcopy(self.contact1)
         self.contact1_ret.update({
@@ -69,11 +73,13 @@ class TestContact(unittest.TestCase):
             'website': ['http://www.johnrowdy.com', 'http://www.yahoo.com'],
             'phones': [{'no': '+4407979463643', 'type': 'Fax'}, {'no': '+4407979363643', 'type': 'Pager'}, {'no': '+4407979163643', 'type': 'Work'}],
             'smids': [{'smid': 'dumbo33', 'type': 'YouTube'}, {'smid': 'miky22', 'type': 'Whatsapp'}],
-            'cf': {'1': "test2"},
+            'cf': {'1': 'test2', '2': 'cf_value2', '3': '2017-05-22', '4': 'US', '5': 'CA', '6': 'US-CA', '7': 'USD'},
             'tags': ['othertag1', 'othertag2', 'othertag3'],
             'tasks': [3, 4, 2],
             'opportunities': [45, 101, 33],
             'cases': [55, 89],
+            'files': [11, 23],
+            'lfiles': [121, 331, 455],
             'lc': '2017-01-02T05:22:12Z',
         }
 
@@ -100,8 +106,15 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ])
-        self.assertEqual(list(c.custom_field_values), [
-            CustomFieldValueBase(custom_field=CustomField(self.session, key=1, lazy_load=True), custom_field_value="test")
+
+        self.assertEqual(sorted(c.custom_field_values, key=lambda cfv: cfv.custom_field.key), [
+            CustomFieldValue(custom_field=CustomField(self.session, key=1, lazy_load=True), custom_field_value="test"),
+            CustomFieldValue(custom_field=CustomField(self.session, key=2, lazy_load=True), custom_field_value="cf_value2"),
+            CustomFieldValue(custom_field=CustomField(self.session, key=3, lazy_load=True), custom_field_value="2017-05-22"),
+            CustomFieldValue(custom_field=CustomField(self.session, key=4, lazy_load=True), custom_field_value="US"),
+            CustomFieldValue(custom_field=CustomField(self.session, key=5, lazy_load=True), custom_field_value="CA"),
+            CustomFieldValue(custom_field=CustomField(self.session, key=6, lazy_load=True), custom_field_value="US-CA"),
+            CustomFieldValue(custom_field=CustomField(self.session, key=7, lazy_load=True), custom_field_value="USD"),
         ])
         self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
 
@@ -114,6 +127,8 @@ class TestContact(unittest.TestCase):
         self.assertEqual([t.key for t in c.opportunities], [100, 101, 211])
         self.assertTrue(all(isinstance(t, Case) for t in c.cases))
         self.assertEqual([t.key for t in c.cases], [55, 57])
+        self.assertEqual([t.key for t in c.files], [22, 34])
+        self.assertEqual([t.key for t in c.linked_files], [120, 330, 454])
 
         self.assertEqual(c.last_contacted, '2017-01-02T05:22:12Z')
 
@@ -128,23 +143,9 @@ class TestContact(unittest.TestCase):
                         self.contact1_ret
                     ]
                 })
-            ),
-            '/customfield/1': (
-                200,
-                json.dumps({
-                    'status': 'OK',
-                    'content': [{
-                        'id': 1,
-                        'name': 'Input Custom Field',
-                        'fullname': 'Input Custom Field',
-                        'elemType': 'input',
-                        'modelType': ['customers', 'companies'],
-                        'multiple': False,
-                        'app': None
-                    }]
-                })
             )
         })
+        set_up_GET_custom_fields(mockRequestsGET, CustomField.FIELD_SCOPE.CONTACTS)
 
         c = Contact(self.session, key=445)
         self.assertFalse(c.is_new())
@@ -153,23 +154,7 @@ class TestContact(unittest.TestCase):
     @mock.patch('requests.post')
     @mock.patch('requests.get')
     def test_add_new_contact(self, mockRequestsGET, mockRequestsPOST):
-        setup_requests_call_mock(mockRequestsGET, {
-            '/customfield/1': (
-                200,
-                json.dumps({
-                    'status': 'OK',
-                    'content': [{
-                        'id': 1,
-                        'name': 'Input Custom Field',
-                        'fullname': 'Input Custom Field',
-                        'elemType': 'input',
-                        'modelType': ['customers', 'companies'],
-                        'multiple': False,
-                        'app': None
-                    }]
-                })
-            )
-        })
+        set_up_GET_custom_fields(mockRequestsGET, CustomField.FIELD_SCOPE.CONTACTS)
         setup_requests_call_mock(mockRequestsPOST, {
             '/contact': (
                 200,
@@ -205,6 +190,12 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ]
         c.custom_field_values[1] = "test"
+        c.custom_field_values[2] = "cf_value2"
+        c.custom_field_values[3] = datetime.date(2017, 5, 22)
+        c.custom_field_values[4] = "US"
+        c.custom_field_values[5] = "CA"
+        c.custom_field_values[6] = "US-CA"
+        c.custom_field_values[7] = "USD"
 
         c.tags = ['tag1', 'tag2', 'tag3']
 
@@ -213,6 +204,8 @@ class TestContact(unittest.TestCase):
         c.tasks = [Task(self.session, key=1, lazy_load=True), Task(self.session, key=2, lazy_load=True)]
         c.opportunities = [Opportunity(self.session, key=100, lazy_load=True), Opportunity(self.session, key=101, lazy_load=True), Opportunity(self.session, key=211, lazy_load=True)]
         c.cases = [Case(self.session, key=55, lazy_load=True), Case(self.session, key=57, lazy_load=True)]
+        c.files = [File(self.session, key=22, lazy_load=True), File(self.session, key=34, lazy_load=True)]
+        c.linked_files = [LinkedFile(self.session, key=120, lazy_load=True), LinkedFile(self.session, key=330, lazy_load=True), LinkedFile(self.session, key=454, lazy_load=True)]
 
         self.assertTrue(c.is_new())
         c.save()
@@ -240,23 +233,9 @@ class TestContact(unittest.TestCase):
                         self.contact1_ret
                     ]
                 })
-            ),
-            '/customfield/1': (
-                200,
-                json.dumps({
-                    'status': 'OK',
-                    'content': [{
-                        'id': 1,
-                        'name': 'Input Custom Field',
-                        'fullname': 'Input Custom Field',
-                        'elemType': 'input',
-                        'modelType': ['customers', 'companies'],
-                        'multiple': False,
-                        'app': None
-                    }]
-                })
             )
         })
+        set_up_GET_custom_fields(mockRequestsGET, CustomField.FIELD_SCOPE.CONTACTS)
         setup_requests_call_mock(mockRequestsPUT, {
             '/contact/445': (
                 200,
@@ -301,6 +280,8 @@ class TestContact(unittest.TestCase):
         c.tasks = [Task(self.session, key=3, lazy_load=True), Task(self.session, key=4, lazy_load=True), Task(self.session, key=2, lazy_load=True)]
         c.opportunities = [Opportunity(self.session, key=45, lazy_load=True), Opportunity(self.session, key=101, lazy_load=True), Opportunity(self.session, key=33, lazy_load=True)]
         c.cases = [Case(self.session, key=55, lazy_load=True), Case(self.session, key=89, lazy_load=True)]
+        c.files = [File(self.session, key=11, lazy_load=True), File(self.session, key=23, lazy_load=True)]
+        c.linked_files = [LinkedFile(self.session, key=121, lazy_load=True), LinkedFile(self.session, key=331, lazy_load=True), LinkedFile(self.session, key=455, lazy_load=True)]
 
         c.save()
         self.assertFalse(c.is_new())

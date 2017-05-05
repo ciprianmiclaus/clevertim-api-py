@@ -30,6 +30,7 @@ def _multi_attr_get(attr_name, default=None, custom_type=None, readonly=False):
         ret = self._content.get(attr_name, default)
         if ret is not None:
             if custom_type:
+                # TODO: fix this
                 ret = [custom_type(content=ct, session=self.session) for ct in ret]
             if readonly:
                 return tuple(ret)
