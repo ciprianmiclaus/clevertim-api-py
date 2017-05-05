@@ -182,7 +182,8 @@ class CustomFieldValueCollection(ValueSerializer):
             assert isinstance(content, dict) and isinstance(session, Session) and custom_field is None and custom_field_value is None
             self._content = content
             self.session = session
-            for cf_id, cf_val in content.items():
+            items = tuple(content.items())
+            for cf_id, cf_val in items:
                 cf_id_int = int(cf_id)
                 if cf_id_int != cf_id:
                     del self._content[cf_id]
