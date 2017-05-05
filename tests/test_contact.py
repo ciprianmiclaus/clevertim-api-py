@@ -107,7 +107,7 @@ class TestContact(unittest.TestCase):
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),
         ])
 
-        self.assertEqual(sorted(c.custom_field_values, key=lambda cfv: cfv.custom_field.key), [
+        values = [
             CustomFieldValue(custom_field=CustomField(self.session, key=1, lazy_load=True), custom_field_value="test"),
             CustomFieldValue(custom_field=CustomField(self.session, key=2, lazy_load=True), custom_field_value="cf_value2"),
             CustomFieldValue(custom_field=CustomField(self.session, key=3, lazy_load=True), custom_field_value="2017-05-22"),
@@ -115,7 +115,17 @@ class TestContact(unittest.TestCase):
             CustomFieldValue(custom_field=CustomField(self.session, key=5, lazy_load=True), custom_field_value="CA"),
             CustomFieldValue(custom_field=CustomField(self.session, key=6, lazy_load=True), custom_field_value="US-CA"),
             CustomFieldValue(custom_field=CustomField(self.session, key=7, lazy_load=True), custom_field_value="USD"),
-        ])
+        ]
+        self.assertEqual(sorted(c.custom_field_values, key=lambda cfv: cfv.custom_field.key), values)
+        for key in range(1, 8):
+            cf = CustomField(self.session, key=key, lazy_load=True)
+            self.assertEqual(c.custom_field_values[cf], values[key - 1])
+
+        self.assertEqual(c.custom_field_values.get(7), values[6])
+        self.assertEqual(c.custom_field_values.get(CustomField(self.session, key=7, lazy_load=True)), values[6])
+        self.assertIsNone(c.custom_field_values.get(12345))
+        self.assertIsNone(c.custom_field_values.get(CustomField(self.session, key=12345, lazy_load=True)))
+
         self.assertEqual(c.tags, ['tag1', 'tag2', 'tag3'])
 
         self.assertIsInstance(c.company, Company)
@@ -192,7 +202,7 @@ class TestContact(unittest.TestCase):
         c.custom_field_values[1] = "test"
         c.custom_field_values[2] = "cf_value2"
         c.custom_field_values[3] = datetime.date(2017, 5, 22)
-        c.custom_field_values[4] = "US"
+        c.custom_field_values[CustomField(self.session, key=4, lazy_load=True)] = "US"
         c.custom_field_values[5] = "CA"
         c.custom_field_values[6] = "US-CA"
         c.custom_field_values[7] = "USD"

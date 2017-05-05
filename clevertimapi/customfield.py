@@ -175,30 +175,25 @@ class CustomFieldValue(ValueSerializer):
 
 
 class CustomFieldValueCollection(ValueSerializer):
-    def __init__(self, content=None, custom_field=None, custom_field_value=None, session=None):
+    def __init__(self, content=None, session=None):
+        assert isinstance(content, dict) and isinstance(session, Session)
         self._cf_by_id = {}
         # self._cf_by_name = {}
-        if content is not None:
-            assert isinstance(content, dict) and isinstance(session, Session) and custom_field is None and custom_field_value is None
-            self._content = content
-            self.session = session
-            items = tuple(content.items())
-            for cf_id, cf_val in items:
-                cf_id_int = int(cf_id)
-                if cf_id_int != cf_id:
-                    del self._content[cf_id]
-                    self._content[cf_id_int] = cf_val
-                cf = CustomField(session, key=cf_id_int, lazy_load=True)
-                self._assert_custom_field_scope(cf)
-                val = CustomFieldValue(
-                    custom_field=cf,
-                    custom_field_value=cf_val
-                )
-                self._cf_by_id[cf_id_int] = val
-        else:
-            assert content is None and session is None and isinstance(custom_field, CustomField)
-            self._content = {}
-            self[custom_field] = custom_field_value
+        self._content = content
+        self.session = session
+        items = tuple(content.items())
+        for cf_id, cf_val in items:
+            cf_id_int = int(cf_id)
+            if cf_id_int != cf_id:
+                del self._content[cf_id]
+                self._content[cf_id_int] = cf_val
+            cf = CustomField(session, key=cf_id_int, lazy_load=True)
+            self._assert_custom_field_scope(cf)
+            val = CustomFieldValue(
+                custom_field=cf,
+                custom_field_value=cf_val
+            )
+            self._cf_by_id[cf_id_int] = val
 
     def _assert_custom_field_scope(self, custom_field):
         cf_type = getattr(self, 'CUSTOM_FIELD_SCOPE', None)
