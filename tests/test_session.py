@@ -150,18 +150,18 @@ class TestSession(unittest.TestCase):
     def test_make_request_delete(self, mockRequestsDELETE):
         response = mock.Mock()
         response.status_code = 200
-        response.text = json.dumps(self.response)
+        response.text = json.dumps({'status': 'OK'})
         mockRequestsDELETE.return_value = response
         session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
         ret = session.make_request(endpoint='endpoint', resource_id='3434', method='DELETE', payload=None)
-        self.assertEqual(ret, self.payload)
+        self.assertEqual(ret, {'status': 'OK'})
         mockRequestsDELETE.assert_called_once_with('http://localhost:8000/fake/endpoint/3434', headers=mock.ANY)
 
     @mock.patch('requests.delete')
     def test_make_request_delete_invalid_http_code_raises(self, mockRequestsDELETE):
         response = mock.Mock()
         response.status_code = 470
-        response.text = json.dumps(self.response)
+        response.text = json.dumps({'status': 'OK'})
         mockRequestsDELETE.return_value = response
         session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
         with self.assertRaises(SessionError):
@@ -213,3 +213,59 @@ class TestSession(unittest.TestCase):
         self.assertEqual(mockRequestsGET.call_count, 2)
         self.assertTrue(ret is not ret2)
         self.assertEqual(ret, ret2)
+
+    @mock.patch('requests.post')
+    def test_cache_enabled_post_updates_the_cache(self, mockRequestsPOST):
+        response = mock.Mock()
+        response.status_code = 200
+        response.text = json.dumps(self.response)
+        mockRequestsPOST.return_value = response
+        session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
+        self.assertIsNone(session._get_cached_value(endpoint='endpoint', resource_id=3434))
+        ret = session.make_request(endpoint='endpoint', method='POST', payload=self.payload)
+        self.assertEqual(ret, self.payload)
+        self.assertEqual(session._get_cached_value(endpoint='endpoint', resource_id=3434), self.payload)
+        mockRequestsPOST.assert_called_once_with('http://localhost:8000/fake/endpoint', headers=mock.ANY, data=json.dumps(self.payload, separators=(',', ':')))
+        # now a get without reload, should return from the cache
+        ret = session.make_request(endpoint='endpoint', resource_id=self.payload['id'], method='GET')
+        self.assertEqual(ret, self.payload)
+
+    @mock.patch('requests.put')
+    def test_cache_enabled_put_updates_the_cache(self, mockRequestsPUT):
+        response = mock.Mock()
+        response.status_code = 200
+        response.text = json.dumps(self.response)
+        mockRequestsPUT.return_value = response
+        session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
+        self.assertIsNone(session._get_cached_value(endpoint='endpoint', resource_id=3434))
+        ret = session.make_request(endpoint='endpoint', resource_id=3434, method='PUT', payload=self.payload)
+        self.assertEqual(ret, self.payload)
+        self.assertEqual(session._get_cached_value(endpoint='endpoint', resource_id=3434), self.payload)
+        mockRequestsPUT.assert_called_once_with('http://localhost:8000/fake/endpoint/3434', headers=mock.ANY, data=json.dumps(self.payload, separators=(',', ':')))
+        # now a get without reload, should return from the cache
+        ret = session.make_request(endpoint='endpoint', resource_id=3434, method='GET')
+        self.assertEqual(ret, self.payload)
+
+    @mock.patch('requests.delete')
+    @mock.patch('requests.put')
+    def test_cache_enabled_delete_clears_the_cache(self, mockRequestsPUT, mockRequestsDELETE):
+        response = mock.Mock()
+        response.status_code = 200
+        response.text = json.dumps(self.response)
+        mockRequestsPUT.return_value = response
+        response2 = mock.Mock()
+        response2.status_code = 200
+        response2.text = json.dumps({'status': 'OK'})
+        mockRequestsDELETE.return_value = response2
+        session = Session(api_key='APIKEY', endpoint_url='http://localhost:8000/fake/')
+        self.assertIsNone(session._get_cached_value(endpoint='endpoint', resource_id=3434))
+        ret = session.make_request(endpoint='endpoint', resource_id=3434, method='PUT', payload=self.payload)
+        self.assertEqual(ret, self.payload)
+        self.assertEqual(session._get_cached_value(endpoint='endpoint', resource_id=3434), self.payload)
+        mockRequestsPUT.assert_called_once_with('http://localhost:8000/fake/endpoint/3434', headers=mock.ANY, data=json.dumps(self.payload, separators=(',', ':')))
+        # now a get without reload, should return from the cache
+        ret = session.make_request(endpoint='endpoint', resource_id=3434, method='GET')
+        self.assertEqual(ret, self.payload)
+        # now a delete should clear the cache
+        ret = session.make_request(endpoint='endpoint', resource_id=3434, method='DELETE')
+        self.assertIsNone(session._get_cached_value(endpoint='endpoint', resource_id=3434))

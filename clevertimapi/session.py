@@ -77,6 +77,14 @@ class Session(object):
                 cache_key = self._get_cache_key(endpoint, res['id'])
                 self.session_cache[cache_key] = res
 
+    def _clear_cache(self, endpoint, resource_id):
+        if self.enable_caching:
+            cache_key = self._get_cache_key(endpoint, resource_id)
+            try:
+                del self.session_cache[cache_key]
+            except KeyError:
+                pass
+
     def make_request(self, endpoint, resource_id=None, method='GET', payload=None, reload=False):
         assert endpoint, "Empty endpoint"
 
@@ -100,15 +108,12 @@ class Session(object):
             r = requests.get(url, headers=headers)
         elif method == "POST":
             log.debug("POST %s %s", url, payload)
-            # todo: post needs to update the cache
             r = requests.post(url, headers=headers, data=json.dumps(payload, separators=(',', ':')))
         elif method == "PUT":
             log.debug("PUT %s %s", url, payload)
-            # todo: put needs to update the cache
             r = requests.put(url, headers=headers, data=json.dumps(payload, separators=(',', ':')))
         elif method == "DELETE":
             log.debug("DELETE %s", url)
-            # todo: delete clears the cache
             r = requests.delete(url, headers=headers)
         else:
             assert False, "Unknown method: '%s'" % (method,)
@@ -123,14 +128,16 @@ class Session(object):
         result = response and json.loads(response) or None
 
         if result is not None:
-            result = result['content']
-
-            # update the cache
+            # update or clear the cache
             if method != 'DELETE':
+                result = result['content']
+
                 self._update_cache(endpoint, resource_id, result)
 
-            if method != 'GET' or resource_id is not None:
-                result = result[0]
+                if method != 'GET' or resource_id is not None:
+                    result = result[0]
+            else:
+                self._clear_cache(endpoint, resource_id)
 
         return result
 
