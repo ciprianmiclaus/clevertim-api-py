@@ -172,12 +172,15 @@ class CustomFieldValueCollection(ValueSerializer):
         self._content = content
         if content:
             for cf_id, cf_val in content.items():
-                cf_id = int(cf_id)
+                cf_id_int = int(cf_id)
+                if cf_id_int != cf_id:
+                    del self._content[cf_id]
+                    self._content[cf_id_int] = cf_val
                 val = CustomFieldValueBase(
-                    custom_field=CustomField(session, key=cf_id, lazy_load=True),
+                    custom_field=CustomField(session, key=cf_id_int, lazy_load=True),
                     custom_field_value=cf_val
                 )
-                self._cf_by_id[cf_id] = val
+                self._cf_by_id[cf_id_int] = val
 
     def serialize(self):
         ret = {}
