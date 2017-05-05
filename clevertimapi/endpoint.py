@@ -91,19 +91,21 @@ def _single_ref_attr_get(attr_name, elem_ref_type):
     return _get
 
 
-def _single_ref_attr_set(attr_name, elem_ref_type):
+def _single_ref_attr_set(attr_name, elem_ref_type, validate_func=None):
     def _set(self, value):
         if value is not None:
             assert isinstance(value, Session.enpoint_name_to_cls(elem_ref_type))
+            if validate_func:
+                validate_func(value)
             value = value.key
         self._content[attr_name] = value
     return _set
 
 
-def make_single_elem_ref_property(attr_name, elem_ref_type, doc_string='', readonly=False):
+def make_single_elem_ref_property(attr_name, elem_ref_type, doc_string='', validate_func=None, readonly=False):
     return property(
         _single_ref_attr_get(attr_name, elem_ref_type),
-        None if readonly else _single_ref_attr_set(attr_name, elem_ref_type),
+        None if readonly else _single_ref_attr_set(attr_name, elem_ref_type, validate_func=validate_func),
         None if readonly else _attr_del(attr_name),
         doc_string
     )
