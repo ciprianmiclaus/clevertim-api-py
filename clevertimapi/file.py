@@ -6,6 +6,7 @@ from .endpoint import Endpoint, make_single_elem_property, make_single_readonly_
 def is_folder_saved(folder):
     if folder.is_new():
         raise ValidationError("The parent property needs to be a saved Folder. Call save() on the Folder before assigning it to the parent property.")
+    return True
 
 
 class Folder(Endpoint):
@@ -43,5 +44,6 @@ class LinkedFile(Endpoint):
     icon_url = make_single_readonly_property('icon', doc_string='The link/url to the icon for this file in the external system (i.e. Dropbox, Google Drive)')
 
 
+Session.register_endpoint(Folder)
 Session.register_endpoint(File)
 Session.register_endpoint(LinkedFile)

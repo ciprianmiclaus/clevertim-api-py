@@ -156,6 +156,9 @@ class TestCustomFieldValue(unittest.TestCase):
         self.assertEqual(cfv, cfv2)
         self.assertNotEqual(cfv, cfv3)
 
+        self.assertEqual(cfv3.custom_field, cf)
+        self.assertEqual(cfv3.custom_field_value, 'test2')
+
     def test_custom_field_property_is_readonly(self):
         cf = CustomField(self.session, key=1, lazy_load=True)
         cfv = CustomFieldValue(custom_field=cf, custom_field_value='test')

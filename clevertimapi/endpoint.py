@@ -171,7 +171,10 @@ class Endpoint(object):
         """
         self.session = session
         if key is not None:
-            key = int(key)
+            try:
+                key = int(key)
+            except ValueError:
+                pass
         self._key = key
         self._loaded = False
         self._cached_instances = {}
