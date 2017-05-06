@@ -170,6 +170,7 @@ class TestCustomFieldValue(unittest.TestCase):
         cfv.custom_field_value = 'test2'
         ret = cfv.serialize()
         self.assertEqual(ret, {1: 'test2'})
+        self.assertEqual(repr(cfv), "{1: 'test2'}")
 
     def test_single_input_custom_field_fails_when_set_with_wrong_type(self):
         cf = CustomField(self.session, key=1, lazy_load=True)
@@ -212,26 +213,39 @@ class TestCustomFieldValue(unittest.TestCase):
         with self.assertRaises(ValidationError):
             cfv.custom_field_value = 'test3'
 
-    def test_select_field_cannot_be_instantiated_with_incorrect_value(self):
+    def test_single_select_field_cannot_be_instantiated_with_incorrect_value(self):
         cf = CustomField(self.session, key=2, lazy_load=True)
         self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.SELECT)
         with self.assertRaises(ValidationError):
             CustomFieldValue(custom_field=cf, custom_field_value='test')
 
-    def test_select_field_cannot_be_instantiated_with_incorrect_value2(self):
+    def test_single_select_field_cannot_be_instantiated_with_incorrect_value2(self):
         cf = CustomField(self.session, key=2, lazy_load=True)
         self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.SELECT)
         cfv = CustomFieldValue(custom_field=cf, custom_field_value='cf_value2')
         with self.assertRaises(ValidationError):
             cfv.custom_field_value = 'test'
 
-    def test_date_field_cannot_be_instantiated_with_incorrect_value(self):
+    def test_multiple_select_field_cannot_be_instantiated_with_incorrect_value(self):
+        cf = CustomField(self.session, key=14, lazy_load=True)
+        self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.SELECT)
+        with self.assertRaises(ValidationError):
+            CustomFieldValue(custom_field=cf, custom_field_value=['test'])
+
+    def test_multiple_select_field_cannot_be_instantiated_with_incorrect_value2(self):
+        cf = CustomField(self.session, key=14, lazy_load=True)
+        self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.SELECT)
+        cfv = CustomFieldValue(custom_field=cf, custom_field_value=['cf_value1', 'cf_value2'])
+        with self.assertRaises(ValidationError):
+            cfv.custom_field_value = ['test']
+
+    def test_single_date_field_cannot_be_instantiated_with_incorrect_value(self):
         cf = CustomField(self.session, key=3, lazy_load=True)
         self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.DATE)
         with self.assertRaises(ValidationError):
             CustomFieldValue(custom_field=cf, custom_field_value='test')
 
-    def test_date_field_cannot_be_instantiated_with_incorrect_value2(self):
+    def test_single_date_field_cannot_be_instantiated_with_incorrect_value2(self):
         cf = CustomField(self.session, key=3, lazy_load=True)
         self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.DATE)
         cfv = CustomFieldValue(custom_field=cf, custom_field_value='2017-02-20')
@@ -240,6 +254,23 @@ class TestCustomFieldValue(unittest.TestCase):
             cfv.custom_field_value = 'test'
         with self.assertRaises(ValidationError):
             cfv2.custom_field_value = 'test'
+        self.assertEqual(cfv, cfv2)
+
+    def test_multiple_date_field_cannot_be_instantiated_with_incorrect_value(self):
+        cf = CustomField(self.session, key=15, lazy_load=True)
+        self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.DATE)
+        with self.assertRaises(ValidationError):
+            CustomFieldValue(custom_field=cf, custom_field_value=['test'])
+
+    def test_multiple_date_field_cannot_be_instantiated_with_incorrect_value2(self):
+        cf = CustomField(self.session, key=15, lazy_load=True)
+        self.assertEqual(cf.field_type, CustomField.FIELD_TYPE.DATE)
+        cfv = CustomFieldValue(custom_field=cf, custom_field_value=['2017-02-20', datetime.date(2017, 2, 21)])
+        cfv2 = CustomFieldValue(custom_field=cf, custom_field_value=[datetime.date(2017, 2, 20), '2017-02-21'])
+        with self.assertRaises(ValidationError):
+            cfv.custom_field_value = ['test']
+        with self.assertRaises(ValidationError):
+            cfv2.custom_field_value = [{}]
         self.assertEqual(cfv, cfv2)
 
     def test_date_field_serializes_correctly(self):

@@ -59,6 +59,7 @@ class TestSession(unittest.TestCase):
         self.assertFalse(Session.is_registered_endpoint(SessionError))
         self.assertFalse(Session.is_registered_endpoint('FakeEndpoint'))
         self.assertFalse(Session.is_registered_endpoint('SessionError'))
+        self.assertFalse(Session.is_registered_endpoint(dict))
 
     def test_get_after_deregister_fails(self):
         session = Session(api_key='APIKEY')

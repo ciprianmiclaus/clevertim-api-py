@@ -149,21 +149,31 @@ class CustomFieldValue(ValueSerializer):
             else:
                 _validate_select_value(value)
         elif field_type == CustomField.FIELD_TYPE.DATE:
-            if isinstance(value, string_types):
-                try:
-                    dt = datetime.datetime.strptime(value, '%Y-%m-%d')
-                except ValueError:
-                    raise ValidationError("Incorrect value '%s' for a DATE custom field. Expected a YYYY-MM-DD formatted string or a datetime.date" % (value,))
-                value = dt.strftime('%Y-%m-%d')
+            def _transform_date_value(v):
+                if isinstance(v, string_types):
+                    try:
+                        dt = datetime.datetime.strptime(v, '%Y-%m-%d')
+                    except ValueError:
+                        raise ValidationError("Incorrect value '%s' for a DATE custom field. Expected a YYYY-MM-DD formatted string or a datetime.date" % (v,))
+                    v = dt.strftime('%Y-%m-%d')
+                return v
+            if self._custom_field.is_multi_value:
+                value = [_transform_date_value(v) for v in value]
+            else:
+                value = _transform_date_value(value)
         return value
 
-    def _transform_value(self):
-        value = self._custom_field_value
+    def _transform_single_value(self, value):
         if Session.is_registered_endpoint(type(value)):
             value = '%s' % (value.key,)
         elif isinstance(value, datetime.date):
             value = value.strftime('%Y-%m-%d')
         return value
+
+    def _transform_value(self):
+        if self._custom_field.is_multi_value:
+            return [self._transform_single_value(v) for v in self._custom_field_value]
+        return self._transform_single_value(self._custom_field_value)
 
     def serialize(self):
         return {self._custom_field.key: self._transform_value()}
@@ -173,6 +183,9 @@ class CustomFieldValue(ValueSerializer):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __repr__(self):
+        return '%s' % (self.serialize(),)
 
 
 class CustomFieldValueCollection(ValueSerializer):
