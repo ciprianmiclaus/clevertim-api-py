@@ -9,6 +9,14 @@ class ValueSerializer(object):
         """Custom serialize a value."""
 
 
+def _apply_validate_func(validate_func, value):
+    if validate_func:
+        ret = validate_func(value)
+        # a validate_func can raise specific ValidationError or can return falsy, to raise a generic ValidationError
+        if not ret:
+            raise ValidationError("Validation failed for value='%s'" % (value,))
+
+
 def _single_attr_get(attr_name, default=None, custom_type=None):
     def _get(self):
         self._check_needs_loading()
@@ -47,8 +55,7 @@ def _attr_del(attr_name):
 def _single_attr_set(attr_name, attr_type, validate_func=None):
     def _set(self, value):
         assert isinstance(value, attr_type) or value is None
-        if validate_func:
-            validate_func(value)
+        _apply_validate_func(validate_func, value)
         if isinstance(value, ValueSerializer):
             value = value.serialize()
         self._content[attr_name] = value
@@ -59,8 +66,7 @@ def _multi_attr_set(attr_name, list_elem_type, validate_func=None):
     def _set(self, value):
         assert isinstance(value, list) or value is None
         assert all(isinstance(elem, list_elem_type) for elem in value)
-        if validate_func:
-            validate_func(value)
+        _apply_validate_func(validate_func, value)
         self._content[attr_name] = [v.serialize() if isinstance(v, ValueSerializer) else v for v in value]
     return _set
 
@@ -96,8 +102,7 @@ def _single_ref_attr_set(attr_name, elem_ref_type, validate_func=None):
     def _set(self, value):
         if value is not None:
             assert isinstance(value, Session.enpoint_name_to_cls(elem_ref_type))
-            if validate_func:
-                validate_func(value)
+            _apply_validate_func(validate_func, value)
             value = value.key
         self._content[attr_name] = value
     return _set

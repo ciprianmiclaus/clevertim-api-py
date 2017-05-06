@@ -47,18 +47,13 @@ class CustomField(Endpoint):
 
         @classmethod
         def is_valid_field_scope(cls, value):
-            return value in (
-                cls.CONTACTS,
-                cls.COMPANIES,
-                cls.CASES,
-                cls.OPPORTUNITIES,
-            )
+            return isinstance(value, list) and value and all(v in (cls.CONTACTS, cls.COMPANIES, cls.CASES, cls.OPPORTUNITIES) for v in value)
 
     name = make_single_elem_property('name', string_types, '', 'The name of the custom field')
     full_name = make_single_elem_property('fullname', string_types, '', 'The full name of the custom field (where the custom field has an application specific prefix)')
 
     field_type = make_single_elem_property('elemType', string_types, '', 'The type of the custom field', validate_func=FIELD_TYPE.is_valid_field_type)
-    field_scope = make_multi_elem_property('modelType', string_types, 'The scope of the custom field (what it is applicable to)', validate_func=FIELD_SCOPE.is_valid_field_scope)
+    field_scope = make_multi_elem_property('modelType', string_types, 'The scope of the custom field (what it is applicable to). A list of FIELD_SCOPE constants.', validate_func=FIELD_SCOPE.is_valid_field_scope)
     # TODO: app = ''
 
     is_multi_value = make_single_elem_property('multiple', bool, '', 'Specifies if this custom field allows multiple values or just a single value')
@@ -66,21 +61,30 @@ class CustomField(Endpoint):
     allowed_values = make_multi_elem_property('values', string_types, 'The list of values allowed. Only populated for custom fields of type select.')
 
     def validate(self):
-        elem_type = self._content.get('elemType')
-        if elem_type == self.FIELD_TYPE.SELECT and not self.allowed_values:
+        if not self.name:
+            raise ValidationError("The custom field needs a name.")
+        field_type = self.field_type
+        if not field_type:
+            raise ValidationError("The custom field needs a field_type.")
+        if field_type == self.FIELD_TYPE.SELECT and not self.allowed_values:
             raise ValidationError("A select custom field needs to specify the allowed_values property.")
+        if not self.field_scope:
+            raise ValidationError("The custom field needs a field_scope.")
 
 
 class CustomFieldValue(ValueSerializer):
 
     def __init__(self, content=None, custom_field=None, custom_field_value=None, session=None):
         if content:
+            assert custom_field is None and custom_field_value is None and isinstance(session, Session)
             keys = list(content)
             assert len(keys) == 1, "Invalid CustomFieldValue content: %s" % (content,)
             key = keys[0]
             assert isinstance(key, int)
             custom_field = CustomField(session, key=key, lazy_load=True)
             custom_field_value = content[key]
+        else:
+            assert custom_field is not None and custom_field_value is not None and session is None
         self._custom_field = custom_field
         self._custom_field_value = self._validate_value(custom_field_value)
 
@@ -156,7 +160,7 @@ class CustomFieldValue(ValueSerializer):
     def _transform_value(self):
         value = self._custom_field_value
         if Session.is_registered_endpoint(type(value)):
-            value = value.key
+            value = '%s' % (value.key,)
         elif isinstance(value, datetime.date):
             value = value.strftime('%Y-%m-%d')
         return value
@@ -169,9 +173,6 @@ class CustomFieldValue(ValueSerializer):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
-    def __repr__(self):
-        return '%s' % (self.serialize(),)
 
 
 class CustomFieldValueCollection(ValueSerializer):

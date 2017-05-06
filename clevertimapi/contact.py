@@ -19,6 +19,7 @@ class PhoneNumber(ValueSerializer):
         def is_valid_phone_type(cls, value):
             if value not in cls.ALL_VALID_VALUES:
                 raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
+            return True
 
     def __init__(self, content=None, phone_number=None, phone_type=None, session=None):
         self._content = {}
@@ -91,6 +92,7 @@ class SocialMediaId(ValueSerializer):
         def is_valid_social_media_type(cls, value):
             if value not in cls.ALL_VALID_VALUES:
                 raise ValidationError("Invalid phone type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
+            return True
 
     def __init__(self, content=None, social_media_id=None, social_media_type=None, session=None):
         self._content = {}
