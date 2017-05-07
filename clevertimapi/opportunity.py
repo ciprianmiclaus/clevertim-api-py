@@ -8,6 +8,10 @@ class Opportunity(Endpoint):
 
     ENDPOINT = '/opportunity'
 
+    DEFAULTS = {
+        'cf': {}
+    }
+
     name = make_single_elem_property('name', string_types, '', 'Opportunity headline text')
     description = make_single_elem_property('description', string_types, '', 'Some text about this opportunity')
     lead_user = make_single_elem_ref_property('leadUser', 'User', 'The user this opportunity is assigned to')
@@ -25,6 +29,10 @@ class Opportunity(Endpoint):
     linked_files = make_multi_elem_ref_property('lfiles', 'LinkedFile', 'List of linked files for this opportunity')
 
     custom_field_values = make_single_elem_property('cf', OpportunitiesCustomFieldValueCollection, {}, 'Opportunity\'s list of custom field values', custom_type=OpportunitiesCustomFieldValueCollection)
+
+    created_by = make_single_elem_ref_property('userId', 'User', 'The user who created this opportunity', readonly=True)
+
+    # TODO: cust
 
 
 Session.register_endpoint(Opportunity)

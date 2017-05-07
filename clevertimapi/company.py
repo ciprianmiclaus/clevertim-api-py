@@ -10,7 +10,8 @@ class Company(Endpoint):
     ENDPOINT = '/company'
 
     DEFAULTS = {
-        'is_company': True
+        'is_company': True,
+        'cf': {}
     }
 
     name = make_single_elem_property('cn', string_types, '', 'Company\'s name')
