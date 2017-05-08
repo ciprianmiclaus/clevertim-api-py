@@ -28,20 +28,17 @@ def setup_requests_call_mock(requestsMockObj, config):
 
 def generate_custom_field_info(key, name, field_type, field_scope, multiple, values):
     ret = {
-        'status': 'OK',
-        'content': [{
-            'id': key,
-            'name': name,
-            'fullname': name,
-            'elemType': field_type,
-            'modelType': [field_scope],
-            'multiple': multiple,
-            'app': None
-        }]
+        'id': key,
+        'name': name,
+        'fullname': name,
+        'elemType': field_type,
+        'modelType': [field_scope],
+        'multiple': multiple,
+        'app': None
     }
     if values is not None:
-        ret['content'][0]['values'] = values
-    return json.dumps(ret)
+        ret['values'] = values
+    return ret
 
 
 def get_custom_fields_fixtures(field_scope):
@@ -69,6 +66,14 @@ def get_custom_fields_fixtures(field_scope):
 def set_up_GET_custom_fields(requestsGETMockObj, field_scope):
     all_fixtures = get_custom_fields_fixtures(field_scope)
     config = {}
+    content = []
     for fixture in all_fixtures:
-        config['/customfield/%s' % (fixture[0],)] = (200, generate_custom_field_info(*fixture))
+        content.append(generate_custom_field_info(*fixture))
+    config['/customfield'] = (
+        200,
+        json.dumps({
+            'status': 'OK',
+            'content': content
+        })
+    )
     setup_requests_call_mock(requestsGETMockObj, config)

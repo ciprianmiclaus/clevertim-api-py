@@ -193,7 +193,8 @@ class Endpoint(object):
 
     def _load(self, reload=False):
         assert self._key, "Cannot load a resource without a key"
-        self._content = self.session.make_request(self.ENDPOINT, resource_id=self._key, reload=reload)
+        load_all = getattr(self, 'LOAD_ALL', False)
+        self._content = self.session.make_request(self.ENDPOINT, resource_id=self._key, load_all=load_all, reload=reload)
         self._loaded = True
 
     def reload(self):
@@ -248,3 +249,12 @@ class Endpoint(object):
     def last_modified(self):
         self._check_needs_loading()
         return self._content.get('lm')
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __repr__(self):
+        return '%s' % (self._content,)

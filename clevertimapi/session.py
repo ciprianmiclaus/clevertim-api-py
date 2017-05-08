@@ -85,7 +85,7 @@ class Session(object):
             except KeyError:
                 pass
 
-    def make_request(self, endpoint, resource_id=None, method='GET', payload=None, reload=False):
+    def make_request(self, endpoint, resource_id=None, method='GET', payload=None, load_all=False, reload=False):
         assert endpoint, "Empty endpoint"
 
         auth_key = self.api_key + ':X'
@@ -96,7 +96,7 @@ class Session(object):
             'Accept': 'application/json'
         }
 
-        url = self._get_url(endpoint, resource_id=resource_id)
+        url = self._get_url(endpoint, resource_id=None if load_all else resource_id)
 
         if method == "GET":
             if not reload:
@@ -134,7 +134,12 @@ class Session(object):
 
                 self._update_cache(endpoint, resource_id, result)
 
-                if method != 'GET' or resource_id is not None:
+                if method != 'GET':
+                    result = result[0]
+                elif resource_id is not None:
+                    result = [res for res in result if res.get('id') == resource_id]
+                    if not result:
+                        raise SessionError("Not found.")
                     result = result[0]
             else:
                 self._clear_cache(endpoint, resource_id)

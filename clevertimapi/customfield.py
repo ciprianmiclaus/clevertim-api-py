@@ -8,6 +8,8 @@ class CustomField(Endpoint):
 
     ENDPOINT = '/customfield'
 
+    LOAD_ALL = True
+
     class FIELD_TYPE(object):
         INPUT = 'input'
         SELECT = 'select'

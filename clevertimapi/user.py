@@ -6,6 +6,8 @@ class User(Endpoint):
 
     ENDPOINT = '/user'
 
+    LOAD_ALL = True
+
     name = make_single_readonly_property('user', '', 'User\'s name')
     email = make_single_readonly_property('email', '', 'User\'s email')
 
@@ -20,6 +22,8 @@ class User(Endpoint):
 class Group(Endpoint):
 
     ENDPOINT = '/group'
+
+    LOAD_ALL = True
 
     name = make_single_readonly_property('name', '', 'Groups\'s name')
     gid = make_single_readonly_property('gid', '', 'Groups\'s id')
