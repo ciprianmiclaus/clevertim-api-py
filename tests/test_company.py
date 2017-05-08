@@ -87,12 +87,12 @@ class TestCompany(unittest.TestCase):
         self.assertEqual(c.description, 'Clevertim is a great company. They do software.',)
         self.assertEqual(c.emails, ['sales@gmail.com', 'support@yahoo.com'])
         self.assertEqual(c.websites, ['http://www.clevertim.com', 'http://www.clevertim.org'])
-        self.assertEqual(c.phone_numbers, [
+        self.assertEqual(list(c.phone_numbers), [
             PhoneNumber(phone_number='07979463643', phone_type='Work'),
             PhoneNumber(phone_number='07979363643', phone_type='Home'),
             PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
         ])
-        self.assertEqual(c.social_media_ids, [
+        self.assertEqual(list(c.social_media_ids), [
             SocialMediaId(social_media_id='mikesp40', social_media_type='Google+'),
             SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),

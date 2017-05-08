@@ -96,12 +96,12 @@ class TestContact(unittest.TestCase):
         self.assertEqual(c.description, 'Mike is a great, likeable guy. He always returns my calls.')
         self.assertEqual(c.emails, ['mike.doodley@gmail.com', 'mike.doodley@yahoo.com'])
         self.assertEqual(c.websites, ['http://www.google.com', 'http://www.mikedoodley.com'])
-        self.assertEqual(c.phone_numbers, [
+        self.assertEqual(list(c.phone_numbers), [
             PhoneNumber(phone_number='07979463643', phone_type='Work'),
             PhoneNumber(phone_number='07979363643', phone_type='Home'),
             PhoneNumber(phone_number='07979163643', phone_type='Mobile'),
         ])
-        self.assertEqual(c.social_media_ids, [
+        self.assertEqual(list(c.social_media_ids), [
             SocialMediaId(social_media_id='mikesp40', social_media_type='Google+'),
             SocialMediaId(social_media_id='ciprianmiclaus', social_media_type='Github'),
             SocialMediaId(social_media_id='cippy', social_media_type='Skype'),

@@ -1,4 +1,5 @@
 from .session import Session
+from .utils import list_wrapper
 
 
 class ValueSerializer(object):
@@ -39,7 +40,8 @@ def _multi_attr_get(attr_name, default=None, custom_type=None, readonly=False):
         if ret is not None:
             if custom_type:
                 # TODO: fix this
-                ret = [custom_type(content=ct, session=self.session) for ct in ret]
+                # ret = [custom_type(content=ct, session=self.session) for ct in ret]
+                ret = list_wrapper(content=ret, custom_type=custom_type, readonly=readonly, session=self.session)
             if readonly:
                 return tuple(ret)
             return ret

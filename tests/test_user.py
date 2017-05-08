@@ -87,7 +87,7 @@ class TestFile(unittest.TestCase):
 
     def test_load_all_users_on_single_request(self):
         user = User(self.session, key=12)
-        self.mockRequestsGET.assert_called_once_with('https://www.clevertim.com/api/user', headers=mock.ANY)
+        self.mockRequestsGET.assert_called_once_with(Session.ENDPOINT_URL + '/user', headers=mock.ANY)
         self.assertEqual(user.key, 12)
         self.assertEqual(user.name, 'John Cash')
         self.assertEqual(user.email, 'john.cash@yahoo.com')
@@ -98,7 +98,7 @@ class TestFile(unittest.TestCase):
 
         # another load will not go to the server, but hit the cache
         user = User(self.session, key=13)
-        self.mockRequestsGET.assert_called_once_with('https://www.clevertim.com/api/user', headers=mock.ANY)
+        self.mockRequestsGET.assert_called_once_with(Session.ENDPOINT_URL + '/user', headers=mock.ANY)
         self.assertEqual(user.key, 13)
         self.assertEqual(user.name, 'Donald Duck')
         self.assertEqual(user.email, 'donald.duck@disney.com')
@@ -109,7 +109,7 @@ class TestFile(unittest.TestCase):
 
     def test_load_all_groups_on_single_request(self):
         group = Group(self.session, key=6)
-        self.mockRequestsGET.assert_called_once_with('https://www.clevertim.com/api/group', headers=mock.ANY)
+        self.mockRequestsGET.assert_called_once_with(Session.ENDPOINT_URL + '/group', headers=mock.ANY)
         self.assertEqual(group.key, 6)
         self.assertEqual(group.name, 'Sales Users')
         self.assertEqual(group.gid, 4)
@@ -117,7 +117,7 @@ class TestFile(unittest.TestCase):
 
         # another load will not go to the server, but hit the cache
         group = Group(self.session, key=7)
-        self.mockRequestsGET.assert_called_once_with('https://www.clevertim.com/api/group', headers=mock.ANY)
+        self.mockRequestsGET.assert_called_once_with(Session.ENDPOINT_URL + '/group', headers=mock.ANY)
         self.assertEqual(group.key, 7)
         self.assertEqual(group.name, 'Internal Users')
         self.assertEqual(group.gid, 8)
