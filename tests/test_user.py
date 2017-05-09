@@ -113,7 +113,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(group.key, 6)
         self.assertEqual(group.name, 'Sales Users')
         self.assertEqual(group.gid, 4)
-        self.assertEqual(group.users, [User(self.session, key=12, lazy_load=True), User(self.session, key=13, lazy_load=True)])
+        self.assertEqual(list(group.users), [User(self.session, key=12, lazy_load=True), User(self.session, key=13, lazy_load=True)])
 
         # another load will not go to the server, but hit the cache
         group = Group(self.session, key=7)
@@ -121,4 +121,4 @@ class TestFile(unittest.TestCase):
         self.assertEqual(group.key, 7)
         self.assertEqual(group.name, 'Internal Users')
         self.assertEqual(group.gid, 8)
-        self.assertEqual(group.users, [User(self.session, key=11, lazy_load=True), User(self.session, key=12, lazy_load=True), User(self.session, key=13, lazy_load=True)])
+        self.assertEqual(list(group.users), [User(self.session, key=11, lazy_load=True), User(self.session, key=12, lazy_load=True), User(self.session, key=13, lazy_load=True)])

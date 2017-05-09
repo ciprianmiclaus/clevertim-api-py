@@ -39,11 +39,7 @@ def _multi_attr_get(attr_name, default=None, custom_type=None, readonly=False):
         ret = self._content.get(attr_name, default)
         if ret is not None:
             if custom_type:
-                # TODO: fix this
-                # ret = [custom_type(content=ct, session=self.session) for ct in ret]
                 ret = list_wrapper(content=ret, custom_type=custom_type, readonly=readonly, session=self.session)
-            if readonly:
-                return tuple(ret)
             return ret
     return _get
 
@@ -119,11 +115,11 @@ def make_single_elem_ref_property(attr_name, elem_ref_type, doc_string='', valid
     )
 
 
-def _multi_ref_attr_get(attr_name, elem_ref_type):
+def _multi_ref_attr_get(attr_name, elem_ref_type, readonly=False):
     def _get(self):
         self._check_needs_loading()
         keys = self._content.get(attr_name, [])
-        return [self.session.get(elem_ref_type, key, lazy_load=True) for key in keys]
+        return list_wrapper(keys, endpoint_type=elem_ref_type, readonly=readonly, session=self.session)
     return _get
 
 
@@ -140,7 +136,7 @@ def _multi_ref_attr_set(attr_name, elem_ref_type):
 
 def make_multi_elem_ref_property(attr_name, elem_ref_type, doc_string='', readonly=False):
     return property(
-        _multi_ref_attr_get(attr_name, elem_ref_type),
+        _multi_ref_attr_get(attr_name, elem_ref_type, readonly=readonly),
         None if readonly else _multi_ref_attr_set(attr_name, elem_ref_type),
         None if readonly else _attr_del(attr_name),
         doc_string

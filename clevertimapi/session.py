@@ -146,11 +146,13 @@ class Session(object):
 
         return result
 
-    def get(self, endpoint_name, key, lazy_load=False):
-        cache_key = '%s%s' % (endpoint_name, key)
+    def get(self, endpoint, key, lazy_load=False):
+        if not isinstance(endpoint, string_types):
+            endpoint = endpoint.__name__
+        cache_key = '%s%s' % (endpoint, key)
         instance = self.instance_cache.get(cache_key)
         if instance is None:
-            cls = self.ENDPOINT_FACTORY[endpoint_name]
+            cls = self.ENDPOINT_FACTORY[endpoint]
             instance = cls(self, key=key, lazy_load=lazy_load)
             self.instance_cache[cache_key] = instance
         return instance
