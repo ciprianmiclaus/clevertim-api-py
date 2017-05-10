@@ -37,9 +37,11 @@ class TestSession(unittest.TestCase):
         with self.assertRaises(KeyError):
             session.get('FakeEndpoint', key=1, lazy_load=True)
 
-    def test_enpoint_name_to_cls(self):
+    def test_enpoint_accepted_types(self):
         Session.register_endpoint(FakeEndpoint)
-        self.assertTrue(Session.enpoint_name_to_cls('FakeEndpoint') is FakeEndpoint)
+        accepted_types = Session.enpoint_accepted_types('FakeEndpoint')
+        self.assertEqual(len(accepted_types), 1)
+        self.assertTrue(accepted_types[0] is FakeEndpoint)
         Session.deregister_endpoint(FakeEndpoint)
 
     def test_is_registered_endpoint(self):

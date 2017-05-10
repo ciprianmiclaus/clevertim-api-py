@@ -1,7 +1,7 @@
 from .compat import string_types
-from .contact import PhoneNumber, SocialMediaId
+from .contact import PhoneNumber, SocialMediaId, Contact
 from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_property, make_multi_elem_ref_property
-from .session import Session
+from .session import Session, SessionError
 from .customfield import CompaniesCustomFieldValueCollection
 
 
@@ -48,4 +48,14 @@ class Company(Endpoint):
         return self._content.get('lc')
 
 
+def create_contact_or_company(session, key, lazy_load=False):
+    assert isinstance(session, Session)
+    try:
+        return Contact(session, key=key)
+    except SessionError:
+        pass
+    return Company(session, key=key)
+
+
 Session.register_endpoint(Company)
+Session.register_endpoint_factory('ContactOrCompany', create_contact_or_company, accepted_types=(Contact, Company))

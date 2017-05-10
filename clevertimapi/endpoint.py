@@ -99,7 +99,7 @@ def _single_ref_attr_get(attr_name, elem_ref_type):
 def _single_ref_attr_set(attr_name, elem_ref_type, validate_func=None):
     def _set(self, value):
         if value is not None:
-            assert isinstance(value, Session.enpoint_name_to_cls(elem_ref_type))
+            assert isinstance(value, Session.enpoint_accepted_types(elem_ref_type))
             _apply_validate_func(validate_func, value)
             value = value.key
         self._content[attr_name] = value
@@ -127,7 +127,7 @@ def _multi_ref_attr_set(attr_name, elem_ref_type):
     def _set(self, value):
         if value is not None:
             assert isinstance(value, list)
-            elem_ref_type_cls = Session.enpoint_name_to_cls(elem_ref_type)
+            elem_ref_type_cls = Session.enpoint_accepted_types(elem_ref_type)
             assert all(isinstance(v, elem_ref_type_cls) for v in value)
             value = [v.key for v in value]
         self._content[attr_name] = value
@@ -216,6 +216,10 @@ class Endpoint(object):
 
     def is_new(self):
         return not self._key
+
+    def get_content(self):
+        # get the raw content for this endpoint - avoid using directly
+        return self._content
 
     @property
     def key(self):

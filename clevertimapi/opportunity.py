@@ -15,6 +15,7 @@ class Opportunity(Endpoint):
     name = make_single_elem_property('name', string_types, '', 'Opportunity headline text')
     description = make_single_elem_property('description', string_types, '', 'Some text about this opportunity')
     lead_user = make_single_elem_ref_property('leadUser', 'User', 'The user this opportunity is assigned to')
+    who = make_single_elem_ref_property('cust', 'ContactOrCompany', 'The contact or company this task is for')
 
     currency = make_single_elem_property('currency', string_types, '', 'The currency code (e.g. USD, EUR, GBP)')
     value = make_single_elem_property('value', string_types, '', 'The value of this deal')
@@ -31,8 +32,6 @@ class Opportunity(Endpoint):
     custom_field_values = make_single_elem_property('cf', OpportunitiesCustomFieldValueCollection, {}, 'Opportunity\'s list of custom field values', custom_type=OpportunitiesCustomFieldValueCollection)
 
     created_by = make_single_elem_ref_property('userId', 'User', 'The user who created this opportunity', readonly=True)
-
-    # TODO: cust
 
 
 Session.register_endpoint(Opportunity)

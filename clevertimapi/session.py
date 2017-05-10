@@ -29,16 +29,25 @@ class Session(object):
         self.instance_cache = {}
 
     @classmethod
-    def register_endpoint(cls, endpoint_cls):
-        cls.ENDPOINT_FACTORY[endpoint_cls.__name__] = endpoint_cls
+    def register_endpoint(cls, endpoint_cls, accepted_types=None):
+        accepted_types = accepted_types or (endpoint_cls,)
+        cls.register_endpoint_factory(endpoint_cls, endpoint_cls, accepted_types=accepted_types)
+
+    @classmethod
+    def register_endpoint_factory(cls, endpoint, endpoint_factory, accepted_types=None):
+        if not isinstance(endpoint, string_types):
+            endpoint = endpoint.__name__
+        cls.ENDPOINT_FACTORY[endpoint] = (endpoint_factory, accepted_types)
 
     @classmethod
     def deregister_endpoint(cls, endpoint_cls):
-        del cls.ENDPOINT_FACTORY[endpoint_cls.__name__]
+        if not isinstance(endpoint_cls, string_types):
+            endpoint_cls = endpoint_cls.__name__
+        del cls.ENDPOINT_FACTORY[endpoint_cls]
 
     @classmethod
-    def enpoint_name_to_cls(cls, endpoint_name):
-        return cls.ENDPOINT_FACTORY[endpoint_name]
+    def enpoint_accepted_types(cls, endpoint_name):
+        return cls.ENDPOINT_FACTORY[endpoint_name][1]
 
     @classmethod
     def is_registered_endpoint(cls, endpoint_name_or_cls):
@@ -152,7 +161,7 @@ class Session(object):
         cache_key = '%s%s' % (endpoint, key)
         instance = self.instance_cache.get(cache_key)
         if instance is None:
-            cls = self.ENDPOINT_FACTORY[endpoint]
+            cls = self.ENDPOINT_FACTORY[endpoint][0]
             instance = cls(self, key=key, lazy_load=lazy_load)
             self.instance_cache[cache_key] = instance
         return instance
