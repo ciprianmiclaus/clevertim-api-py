@@ -1,5 +1,5 @@
 from clevertimapi.session import Session
-from clevertimapi.company import Company, PhoneNumber, SocialMediaId
+from clevertimapi.company import Company, PhoneNumber, SocialMediaId, Contact, create_contact_or_company
 from clevertimapi.task import Task
 from clevertimapi.opportunity import Opportunity
 from clevertimapi.case import Case
@@ -285,3 +285,57 @@ class TestCompany(unittest.TestCase):
 
         self.assertEqual(session_url, Session.ENDPOINT_URL + Company.ENDPOINT + '/445')
         self.assertEqual(data, self.company2)
+
+    @mock.patch('requests.get')
+    def test_create_contact_or_company1(self, mockRequestsGET):
+        set_up_GET_custom_fields(mockRequestsGET, CustomField.FIELD_SCOPE.COMPANIES)
+        setup_requests_call_mock(mockRequestsGET, {
+            '/company/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.company1_ret
+                    ]
+                })
+            ),
+            '/contact/445': (
+                404,
+                json.dumps({
+                    'status': 'ERROR',
+                    'error': 'No such contact.'
+                })
+            )
+        })
+        c = create_contact_or_company(self.session, key=445)
+        self.assertIsInstance(c, Company)
+        self._compare_against_company1_ret(c)
+
+    @mock.patch('requests.get')
+    def test_create_contact_or_company2(self, mockRequestsGET):
+        set_up_GET_custom_fields(mockRequestsGET, CustomField.FIELD_SCOPE.CONTACTS)
+        setup_requests_call_mock(mockRequestsGET, {
+            '/contact/445': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        {
+                            'id': 445,
+                            'fn': 'Mike'
+                        }
+                    ]
+                })
+            ),
+            '/company/445': (
+                404,
+                json.dumps({
+                    'status': 'ERROR',
+                    'error': 'No such company.'
+                })
+            )
+        })
+        c = create_contact_or_company(self.session, key=445)
+        self.assertIsInstance(c, Contact)
+        self.assertEqual(c.key, 445)
+        self.assertEqual(c.first_name, 'Mike')
