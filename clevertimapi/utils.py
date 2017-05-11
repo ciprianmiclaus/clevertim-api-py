@@ -18,7 +18,9 @@ class custom_type_adapter(object):
         return self.custom_type_instance.serialize()
 
     def __eq__(self, other):
-        return self.custom_type_instance == other.custom_type_instance
+        if isinstance(other, custom_type_adapter):
+            return self.custom_type_instance == other.custom_type_instance
+        return self.custom_type_instance == other
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -116,6 +118,12 @@ class list_wrapper(object):
         else:
             self._content[idx] = value
 
+    def __delitem__(self, idx):
+        assert not self._readonly, "Cannot modify a readonly property"
+        if self._typed_content:
+            del self._typed_content[idx]
+        del self._content[idx]
+
     def __len__(self):
         if self._typed_content is not None:
             assert len(self._typed_content) == len(self._content)
@@ -130,3 +138,15 @@ class list_wrapper(object):
         else:
             for item in self._content:
                 yield item
+
+    def __eq__(self, other):
+        if self._typed_content is not None:
+            return self._typed_content == other
+        return self._content == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __iadd__(self, iterable):
+        self.extend(iterable)
+        return self
