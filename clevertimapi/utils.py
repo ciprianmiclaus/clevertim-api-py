@@ -4,17 +4,14 @@ from .session import Session
 
 class custom_type_adapter(object):
     def __init__(self, custom_type_instance):
-        from .endpoint import Endpoint, ValueSerializer  # to prevent a circular import
-        assert isinstance(custom_type_instance, (Endpoint, ValueSerializer)), "Unsupported value:'%s'" % (custom_type_instance,)
+        from .endpoint import ValueSerializer  # to prevent a circular import
+        assert isinstance(custom_type_instance, ValueSerializer), "Unsupported value:'%s'" % (custom_type_instance,)
         self.custom_type_instance = custom_type_instance
 
     def get_instance(self):
         return self.custom_type_instance
 
     def to_value(self):
-        from .endpoint import Endpoint  # to prevent a circular import
-        if isinstance(self.custom_type_instance, Endpoint):
-            return self.custom_type_instance.key
         return self.custom_type_instance.serialize()
 
     def __eq__(self, other):

@@ -24,13 +24,33 @@ def _single_attr_get(attr_name, default=None, custom_type=None):
         ret = self._content.get(attr_name, default)
         if ret is not None:
             if custom_type:
-                inst = self._cached_instances.get(attr_name)
+                cache_key = '%s%s' % (attr_name, custom_type.__name__)
+                inst = self._cached_instances.get(cache_key)
                 if inst is None:
                     inst = custom_type(content=ret, session=self.session)
-                    self._cached_instances[attr_name] = inst
+                    self._cached_instances[cache_key] = inst
                 ret = inst
             return ret
     return _get
+
+
+def _single_attr_set(attr_name, attr_type, validate_func=None, transform_func=None):
+    def _set(self, value):
+        assert isinstance(value, attr_type) or value is None
+        _apply_validate_func(validate_func, value)
+        if transform_func:
+            transform_func(self._content, attr_name, value)
+        else:
+            if isinstance(value, ValueSerializer):
+                value = value.serialize()
+            self._content[attr_name] = value
+    return _set
+
+
+def _attr_del(attr_name):
+    def _del(self):
+        del self._content[attr_name]
+    return _del
 
 
 def _multi_attr_get(attr_name, default=None, custom_type=None, readonly=False):
@@ -44,22 +64,6 @@ def _multi_attr_get(attr_name, default=None, custom_type=None, readonly=False):
     return _get
 
 
-def _attr_del(attr_name):
-    def _del(self):
-        del self._content[attr_name]
-    return _del
-
-
-def _single_attr_set(attr_name, attr_type, validate_func=None):
-    def _set(self, value):
-        assert isinstance(value, attr_type) or value is None
-        _apply_validate_func(validate_func, value)
-        if isinstance(value, ValueSerializer):
-            value = value.serialize()
-        self._content[attr_name] = value
-    return _set
-
-
 def _multi_attr_set(attr_name, list_elem_type, validate_func=None):
     def _set(self, value):
         assert isinstance(value, list) or value is None
@@ -69,10 +73,10 @@ def _multi_attr_set(attr_name, list_elem_type, validate_func=None):
     return _set
 
 
-def make_single_elem_property(attr_name, elem_type, default=None, doc_string='', validate_func=None, custom_type=None, readonly=False):
+def make_single_elem_property(attr_name, elem_type, default=None, doc_string='', validate_func=None, transform_func=None, custom_type=None, readonly=False):
     return property(
         _single_attr_get(attr_name, default, custom_type=custom_type),
-        None if readonly else _single_attr_set(attr_name, elem_type, validate_func=validate_func),
+        None if readonly else _single_attr_set(attr_name, elem_type, validate_func=validate_func, transform_func=transform_func),
         None if readonly else _attr_del(attr_name),
         doc_string
     )
@@ -151,7 +155,7 @@ class ValidationError(Exception):
     """Raised when the validation of the instance fails before a save."""
 
 
-class Endpoint(object):
+class Endpoint(ValueSerializer):
 
     class VISIBILITY(object):
         PRIVATE = 'PRIVATE'
@@ -188,6 +192,9 @@ class Endpoint(object):
     def _check_needs_loading(self):
         if self._key and not self._loaded:
             self._load()
+
+    def serialize(self):
+        return self.key
 
     def _load(self, reload=False):
         assert self._key, "Cannot load a resource without a key"
