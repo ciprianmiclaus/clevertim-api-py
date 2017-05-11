@@ -71,7 +71,7 @@ class Session(object):
         return self.build_url(self.endpoint_url, endpoint, resource_id=resource_id)
 
     def _get_cache_key(self, endpoint, resource_id):
-        return '%s%s' % (endpoint, resource_id)
+        return '%s%s' % (endpoint, resource_id or '')
 
     def _get_cached_value(self, endpoint, resource_id):
         if self.enable_caching:
