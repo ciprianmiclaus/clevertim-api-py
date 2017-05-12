@@ -42,7 +42,25 @@ class Task(Endpoint):
 
     ENDPOINT = '/task'
 
+    class TASK_TYPES(object):
+        APPOINTMENT = 'Appointment'
+        EMAIL = 'Email'
+        MEETING = 'Meeting'
+        CALL = 'Call'
+        FOLLOWUP = 'Follow up'
+        TODO = 'TO DO'
+        NOTSET = 'Not set'
+
+        ALL_VALID_VALUES = frozenset((APPOINTMENT, EMAIL, MEETING, CALL, FOLLOWUP, TODO, NOTSET))
+
+        @classmethod
+        def is_valid_task_type(cls, value):
+            if value not in cls.ALL_VALID_VALUES:
+                raise ValidationError("Invalid task type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
+            return True
+
     name = make_single_elem_property('name', string_types, '', 'Task headline description')
+    task_type = make_single_elem_property('atype', string_types, '', 'The type of task', validate_func=TASK_TYPES.is_valid_task_type)
 
     location = make_single_elem_property('location', string_types, '', 'The location where this task is suppose to take place')
     who = make_single_elem_ref_property('cust', 'ContactOrCompany', 'The contact or company this task is for')
@@ -63,7 +81,7 @@ class Task(Endpoint):
     is_completed = make_single_elem_property('is_completed', bool, '', 'An indicator (True or False) if the task has been completed')
     is_deleted = make_single_elem_property('is_deleted', bool, '', 'An indicator (True or False) if the task has been deleted')
 
-    # TODO: atype, atypet, (rec, recevery, recurring_opts), gid
+    # TODO: (rec, recevery, recurring_opts), gid
 
 
 Session.register_endpoint(Task)

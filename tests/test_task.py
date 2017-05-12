@@ -48,7 +48,7 @@ class TestTask(unittest.TestCase):
             'id': 445,
         })
         self.task2 = {
-            'atype': 'Email',
+            'atype': 'Call',
             'atypet': 'Email',
             'name': 'Clean up the dishes',
             'userId': 5,
@@ -73,6 +73,7 @@ class TestTask(unittest.TestCase):
     def _compare_against_task1_ret(self, c):
         self.assertEqual(c.key, 445)
         self.assertEqual(c.name, 'Clean up the dishes')
+        self.assertEqual(c.task_type, 'Email')
         self.assertEqual(c.location, 'Bromley')
         self.assertEqual(c.who, Contact(self.session, key=101))
         self.assertEqual(c.start_date, datetime.date(2017, 5, 10))
