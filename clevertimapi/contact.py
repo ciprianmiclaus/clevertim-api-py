@@ -169,7 +169,7 @@ class Contact(Endpoint):
         return self._content.get('lc')
 
     # TODO:
-    # gid, cphoto
+    # cphoto
 
 
 Session.register_endpoint(Contact)

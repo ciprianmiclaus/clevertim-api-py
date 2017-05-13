@@ -64,12 +64,15 @@ def _multi_attr_get(attr_name, default=None, custom_type=None, readonly=False):
     return _get
 
 
-def _multi_attr_set(attr_name, list_elem_type, validate_func=None):
+def _multi_attr_set(attr_name, list_elem_type, validate_func=None, transform_func=None):
     def _set(self, value):
         assert isinstance(value, list) or value is None
         assert all(isinstance(elem, list_elem_type) for elem in value)
         _apply_validate_func(validate_func, value)
-        self._content[attr_name] = [v.serialize() if isinstance(v, ValueSerializer) else v for v in value]
+        if transform_func:
+            transform_func(self._content, attr_name, value)
+        else:
+            self._content[attr_name] = [v.serialize() if isinstance(v, ValueSerializer) else v for v in value]
     return _set
 
 
@@ -82,10 +85,10 @@ def make_single_elem_property(attr_name, elem_type, default=None, doc_string='',
     )
 
 
-def make_multi_elem_property(attr_name, elem_type, doc_string='', validate_func=None, custom_type=None, readonly=False):
+def make_multi_elem_property(attr_name, elem_type, doc_string='', validate_func=None, transform_func=None, custom_type=None, readonly=False):
     return property(
         _multi_attr_get(attr_name, default=[], custom_type=custom_type, readonly=readonly),
-        None if readonly else _multi_attr_set(attr_name, elem_type, validate_func=validate_func),
+        None if readonly else _multi_attr_set(attr_name, elem_type, validate_func=validate_func, transform_func=transform_func),
         None if readonly else _attr_del(attr_name),
         doc_string
     )
@@ -189,6 +192,14 @@ class Endpoint(ValueSerializer):
             if hasattr(self, 'DEFAULTS'):
                 self._content.update(self.DEFAULTS)
 
+    @classmethod
+    def all(cls, session):
+        ret = []
+        content = session.make_request(cls.ENDPOINT)
+        for endpoint_content in content:
+            ret.append(cls(session, key=endpoint_content['id'], content=endpoint_content))
+        return ret
+
     def _check_needs_loading(self):
         if self._key and not self._loaded:
             self._load()
@@ -243,11 +254,21 @@ class Endpoint(ValueSerializer):
 
     private_to = make_single_elem_ref_property('puser', 'User', 'The user this item is private to (if any).')
 
-    def _get_groups(self):
-        pass
+    def get_groups(self):
+        self._check_needs_loading()
+        groups = []
+        gid = self._content.get('gid', 0)
+        if gid:
+            from .user import Group  # avoid cyclical import
+            groups = []
+            for group in Group.all(self.session):
+                if group.gid & gid:
+                    groups.append(group)
+        return tuple(groups)
 
-    def _set_groups(self, value):
-        assert isinstance(value, list)
+    def set_groups(self, groups):
+        assert isinstance(groups, (list, tuple))
+        self._content['gid'] = sum([group.gid for group in groups])
 
     @property
     def added_on(self):

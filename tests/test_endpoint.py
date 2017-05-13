@@ -1,5 +1,6 @@
 from clevertimapi.endpoint import Endpoint
 from clevertimapi.session import Session
+from clevertimapi.user import Group
 import json
 from mock_utils import setup_requests_call_mock
 try:
@@ -26,6 +27,7 @@ class TestEndpoint(unittest.TestCase):
             'content': [{
                 'id': 6789,
                 'is_private': True,
+                'gid': 2 + 4 + 64,
                 'ao': 'now',
                 'lm': '2017-01-04T10:23:22Z',
             }]
@@ -37,6 +39,44 @@ class TestEndpoint(unittest.TestCase):
         self.mockRequestsGET = mock.patch('requests.get').start()
         setup_requests_call_mock(self.mockRequestsGET, {
             '/fake/%s' % key: (200, json.dumps(self.payload, separators=(',', ':')))
+        })
+        self.group1 = {
+            'id': 34,
+            'name': 'Sales Users',
+            'gid': 2,
+            'users': [34, 89, 788]
+        }
+        self.group2 = {
+            'id': 46,
+            'name': 'External Users',
+            'gid': 4,
+            'users': [12, 101]
+        }
+        self.group3 = {
+            'id': 77,
+            'name': 'Marketing Users',
+            'gid': 16,
+            'users': [55]
+        }
+        self.group4 = {
+            'id': 98,
+            'name': 'Field Engineers',
+            'gid': 64,
+            'users': [122, 123, 124]
+        }
+        setup_requests_call_mock(self.mockRequestsGET, {
+            '/group': (
+                200,
+                json.dumps({
+                    'status': 'OK',
+                    'content': [
+                        self.group1,
+                        self.group2,
+                        self.group3,
+                        self.group4
+                    ]
+                })
+            )
         })
 
     def tearDown(self):
@@ -186,3 +226,23 @@ class TestEndpoint(unittest.TestCase):
         endpoint.delete()
 
         mockRequestsDELETE.assert_called_once_with(Session.ENDPOINT_URL + Endpoint.ENDPOINT + '/6789', headers=mock.ANY)
+
+    def test_groups_get(self):
+        self._setup_GET_mock(1234)
+        endpoint = Endpoint(self.session, key=1234, lazy_load=True)
+        self.assertEqual(endpoint.get_groups(), (
+            Group(self.session, key=34),
+            Group(self.session, key=46),
+            Group(self.session, key=98),
+        ))
+
+    def test_groups_set(self):
+        self._setup_GET_mock(1234)
+        endpoint = Endpoint(self.session)
+        groups = [Group(self.session, key=34), Group(self.session, key=46)]
+        endpoint.set_groups(groups)
+        self.assertEqual(endpoint.get_content().get('gid'), 2 + 4)
+        self.assertEqual(endpoint.get_groups(), (
+            Group(self.session, key=34),
+            Group(self.session, key=46),
+        ))

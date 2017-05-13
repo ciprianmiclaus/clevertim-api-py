@@ -59,8 +59,23 @@ class Task(Endpoint):
                 raise ValidationError("Invalid task type '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
             return True
 
+    class TASK_RECURRING_OPTIONS(object):
+        NOT_RECURRING = 'N'
+        DAILY = 'D'
+        WEEKLY = 'W'
+        MONTHLY = 'M'
+        YEARLY = 'Y'
+
+        ALL_VALID_VALUES = frozenset((NOT_RECURRING, DAILY, WEEKLY, MONTHLY, YEARLY))
+
+        @classmethod
+        def is_valid_recurring_option(cls, value):
+            if value not in cls.ALL_VALID_VALUES:
+                raise ValidationError("Invalid recurring option '%s'. Expected one of: %s" % (value, ', '.join(cls.ALL_VALID_VALUES)))
+            return True
+
     name = make_single_elem_property('name', string_types, '', 'Task headline description')
-    task_type = make_single_elem_property('atype', string_types, '', 'The type of task', validate_func=TASK_TYPES.is_valid_task_type)
+    task_type = make_single_elem_property('atype', string_types, TASK_TYPES.NOTSET, 'The type of task', validate_func=TASK_TYPES.is_valid_task_type)
 
     location = make_single_elem_property('location', string_types, '', 'The location where this task is suppose to take place')
     who = make_single_elem_ref_property('cust', 'ContactOrCompany', 'The contact or company this task is for')
@@ -78,10 +93,12 @@ class Task(Endpoint):
 
     comments = make_multi_elem_ref_property('comments', 'Comment', 'List of comments for this task')
 
-    is_completed = make_single_elem_property('is_completed', bool, '', 'An indicator (True or False) if the task has been completed')
-    is_deleted = make_single_elem_property('is_deleted', bool, '', 'An indicator (True or False) if the task has been deleted')
+    is_completed = make_single_elem_property('is_completed', bool, False, 'An indicator (True or False) if the task has been completed')
+    is_deleted = make_single_elem_property('is_deleted', bool, False, 'An indicator (True or False) if the task has been deleted')
 
-    # TODO: (rec, recevery, recurring_opts), gid
+    recurring_option = make_single_elem_property('rec', string_types, TASK_RECURRING_OPTIONS.NOT_RECURRING, 'The recurring option for this task', validate_func=TASK_RECURRING_OPTIONS.is_valid_recurring_option)
+    recurring_every = make_single_elem_property('recevery', int, 1, 'The frequency of the recurring (e.g. every 3 days)')
+    # TODO: (recurring_opts)
 
 
 Session.register_endpoint(Task)

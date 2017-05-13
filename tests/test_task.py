@@ -59,7 +59,7 @@ class TestTask(unittest.TestCase):
             'opp': 123,
             'startDate': {'y': 2017, 'mo': 5, 'd': 10, 'h': 9, 'mi': 0},
             'endDate': {'y': 2017, 'mo': 5, 'd': 10, 'h': 10, 'mi': 0},
-            # 'rec':
+            'rec': 'N',
             'is_completed': False,
             'is_deleted': False,
             'ao': '2017-01-02T05:22:12Z',
