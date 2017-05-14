@@ -28,6 +28,10 @@ class Session(object):
         self.session_cache = {}
         self.instance_cache = {}
 
+    @property
+    def url(self):
+        return self.endpoint_url
+
     @classmethod
     def register_endpoint(cls, endpoint_cls, accepted_types=None):
         accepted_types = accepted_types or (endpoint_cls,)

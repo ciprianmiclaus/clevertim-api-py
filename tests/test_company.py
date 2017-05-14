@@ -51,6 +51,7 @@ class TestCompany(unittest.TestCase):
         self.company1_ret.update({
             'id': 445,
             'lc': '2017-01-02T05:22:12Z',
+            'cphoto': 'logo.jpg',
         })
         self.company2 = {
             'id': 445,
@@ -74,6 +75,7 @@ class TestCompany(unittest.TestCase):
             'files': [11, 23],
             'lfiles': [121, 331, 455],
             'lc': '2017-01-02T05:22:12Z',
+            'cphoto': 'logo.jpg',
         }
 
     def _compare_against_company1_ret(self, c):
@@ -129,6 +131,7 @@ class TestCompany(unittest.TestCase):
         self.assertEqual([t.key for t in c.linked_files], [120, 330, 454])
 
         self.assertEqual(c.last_contacted, '2017-01-02T05:22:12Z')
+        self.assertEqual(c.company_logo, 'https://www.clevertim.com/getcphoto/445/logo.jpg')
 
     @mock.patch('requests.get')
     def test_load_company(self, mockRequestsGET):
@@ -285,6 +288,7 @@ class TestCompany(unittest.TestCase):
 
         self.assertEqual(session_url, Session.ENDPOINT_URL + Company.ENDPOINT + '/445')
         self.assertEqual(data, self.company2)
+        self.assertEqual(c.company_logo, 'https://www.clevertim.com/getcphoto/445/logo.jpg')
 
     @mock.patch('requests.get')
     def test_create_contact_or_company1(self, mockRequestsGET):

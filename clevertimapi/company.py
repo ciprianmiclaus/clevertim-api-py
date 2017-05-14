@@ -47,6 +47,17 @@ class Company(Endpoint):
         self._check_needs_loading()
         return self._content.get('lc')
 
+    @property
+    def company_logo(self):
+        """The url to the company logo (an image)."""
+        self._check_needs_loading()
+        cphoto = self._content.get('cphoto')
+        if cphoto:
+            url = self.session.url
+            if url.endswith('/api'):
+                url = url[:-4]
+            return url + '/getcphoto/%s/%s' % (self.key, cphoto)
+
 
 def create_contact_or_company(session, key, lazy_load=False):
     assert isinstance(session, Session)

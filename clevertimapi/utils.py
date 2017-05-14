@@ -27,7 +27,6 @@ class list_wrapper(object):
     def __init__(self, content, endpoint_type=None, custom_type=None, readonly=False, session=None):
         from .endpoint import Endpoint, ValueSerializer  # to prevent a circular import
         assert isinstance(content, list)
-        assert session is None or isinstance(session, Session)
         assert not all([endpoint_type, custom_type])
         self._content = content
         self._endpoint_type = endpoint_type
@@ -35,11 +34,13 @@ class list_wrapper(object):
         self.allowed_types = tuple(filter(None, [endpoint_type, custom_type]))
         self._session = session
         if self._endpoint_type:
+            assert isinstance(session, Session)
             assert isinstance(self._endpoint_type, string_types) or issubclass(self._endpoint_type, Endpoint), "Unsupported endpoint type: '%s'" % (self._endpoint_type,)
             self._typed_content = [
                 custom_type_adapter(session.get(self._endpoint_type, key, lazy_load=True)) for key in self._content
             ]
         elif self._custom_type:
+            assert isinstance(session, Session)
             assert issubclass(self._custom_type, ValueSerializer), "Unsupported custom type: '%s'" % (self._custom_type,)
             self._typed_content = [
                 custom_type_adapter(custom_type(content=ct, session=session)) for ct in self._content

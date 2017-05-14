@@ -168,8 +168,16 @@ class Contact(Endpoint):
         self._check_needs_loading()
         return self._content.get('lc')
 
-    # TODO:
-    # cphoto
+    @property
+    def contact_photo(self):
+        """The url to the contact photo (an image)."""
+        self._check_needs_loading()
+        cphoto = self._content.get('cphoto')
+        if cphoto:
+            url = self.session.url
+            if url.endswith('/api'):
+                url = url[:-4]
+            return url + '/getcphoto/%s/%s' % (self.key, cphoto)
 
 
 Session.register_endpoint(Contact)

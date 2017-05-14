@@ -55,6 +55,7 @@ class TestContact(unittest.TestCase):
         self.contact1_ret.update({
             'id': 445,
             'lc': '2017-01-02T05:22:12Z',
+            'cphoto': 'pic.jpg',
         })
         self.contact2 = {
             'id': 445,
@@ -81,6 +82,7 @@ class TestContact(unittest.TestCase):
             'files': [11, 23],
             'lfiles': [121, 331, 455],
             'lc': '2017-01-02T05:22:12Z',
+            'cphoto': 'pic.jpg',
         }
 
     def _compare_against_contact1_ret(self, c):
@@ -141,6 +143,7 @@ class TestContact(unittest.TestCase):
         self.assertEqual([t.key for t in c.linked_files], [120, 330, 454])
 
         self.assertEqual(c.last_contacted, '2017-01-02T05:22:12Z')
+        self.assertEqual(c.contact_photo, 'https://www.clevertim.com/getcphoto/445/pic.jpg')
 
     @mock.patch('requests.get')
     def test_load_contact(self, mockRequestsGET):
@@ -303,3 +306,5 @@ class TestContact(unittest.TestCase):
 
         self.assertEqual(session_url, Session.ENDPOINT_URL + Contact.ENDPOINT + '/445')
         self.assertEqual(data, self.contact2)
+
+        self.assertEqual(c.contact_photo, 'https://www.clevertim.com/getcphoto/445/pic.jpg')
