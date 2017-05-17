@@ -120,8 +120,8 @@ Deleting an existing contact
 	# and its key will be None
 	assert contact.key is None
 
-Lazy loading of data
---------------------
+Lazy vs. eager loading of data
+------------------------------
 
 Any resource/object can be loaded in a lazy or eager fashion. This is controlled via the lazy_load parameter when the instance is created.
 Here is an example.
