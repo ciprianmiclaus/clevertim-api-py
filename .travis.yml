@@ -14,11 +14,10 @@ install:
   - pip install coveralls==0.5
 before_script:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2; fi
-  - 'if [[ $TRAVIS_PYTHON_VERSION == "3.6" ]]; then 
-        pip install Sphinx;
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then
 	    pip install --user travis-sphinx;
-	    export PATH=$HOME/.local:$PATH;
-	 fi'
+	    export PATH=$HOME/.local/bin:$PATH;
+	fi
   #ignore line too long in flake8 (flake8 doesn't support Python 2.6 anymore)
   - if [[ $TRAVIS_PYTHON_VERSION != '2.6' ]]; then pip install flake8==3.3.0;flake8 --ignore E501 .; fi
   - export COVERAGE_PROCESS_START=$PWD/.coveragerc
