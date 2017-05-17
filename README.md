@@ -5,3 +5,5 @@
 
 [Clevertim CRM](https://www.clevertim.com) Python API
 
+
+[Clevertim API PY Documentation](https://ciprianmiclaus.github.io/clevertim-api-py/) on Github Pages
