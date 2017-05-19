@@ -52,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'clevertim-api-py'
-copyright = '2017, Ciprian Miclaus'
+copyright = '2017, <a href="https://www.clevertim.com">Clevertim Ltd.</a>'
 author = 'Ciprian Miclaus'
 
 # The version info for the project you're documenting, acts as replacement for
