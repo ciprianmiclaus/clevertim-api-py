@@ -1,7 +1,7 @@
 import datetime
 from .compat import string_types
 from .session import Session
-from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_ref_property, make_single_elem_ref_property, ValidationError
+from .endpoint import Endpoint, make_single_elem_property, make_multi_elem_ref_property, make_single_elem_ref_property, ValidationError, ValueSerializer
 
 
 def date_transform_from_content(content, session):
@@ -36,6 +36,42 @@ def time_transform_to_content(content, attr_name, value):
     if not isinstance(value, datetime.time):
         raise ValidationError("Expected datetime.time and not %s" % (type(value,)))
     content.setdefault(attr_name, {}).update({'h': value.hour, 'mi': value.minute})
+
+
+class RecurringDetails(ValueSerializer):
+
+    class RECURRING_TYPE(object):
+        SKIP_WEEKENDS = 'weekday'
+
+        ALL_VALID_VALUES = frozenset((SKIP_WEEKENDS,))
+
+        @classmethod
+        def is_valid_recurring_type(cls, value):
+            if value is not None and value not in cls.ALL_VALID_VALUES:
+                raise ValidationError("Invalid recurring type '%s'. Only SKIP_WEEKENDS supported" % (value,))
+            return True
+
+    def __init__(self, content=None, recurring_type=None, session=None):
+        self._content = {}
+        if content:
+            recurring_type = content.get('type')
+        if recurring_type is not None:
+            self.recurring_type = recurring_type
+
+    recurring_type = make_single_elem_property('type', string_types, '', 'Recurring type: Only SKIP_WEEKENDS supported', validate_func=RECURRING_TYPE.is_valid_recurring_type)
+
+    def serialize(self):
+        recurring_type = self._content.get('type')
+        self.RECURRING_TYPE.is_valid_recurring_type(recurring_type)
+        if recurring_type is None and self._content:
+            return {}
+        return self._content
+
+    def __eq__(self, other):
+        return self.recurring_type == other.recurring_type
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Task(Endpoint):
@@ -98,7 +134,7 @@ class Task(Endpoint):
 
     recurring_option = make_single_elem_property('rec', string_types, TASK_RECURRING_OPTIONS.NOT_RECURRING, 'The recurring option for this task', validate_func=TASK_RECURRING_OPTIONS.is_valid_recurring_option)
     recurring_every = make_single_elem_property('recevery', int, 1, 'The frequency of the recurring (e.g. every 3 days)')
-    # TODO: (recurring_opts)
+    recurring_details = make_single_elem_property('recopts', RecurringDetails, {}, 'Stores any additional information about the recurrence of the task', custom_type=RecurringDetails)
 
 
 Session.register_endpoint(Task)

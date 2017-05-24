@@ -96,14 +96,16 @@ class Note(Endpoint):
     comments = make_multi_elem_ref_property('comments', 'Comment', 'List of comments for this note')
 
     @property
+    def headline(self):
+        return self._content.get('hl')
+
+    @property
     def sms_delivery_info(self):
         return self._content.get('delvry', Note.NOTE_DELIVERY_TYPES.NO_EXTERNAL_DELIVERY)
 
     @property
     def email_info(self):
         return EmailInfo(content=self._content.get('email'), session=self.session)
-
-    # TODO: fmt, headline
 
 
 Session.register_endpoint(Note)

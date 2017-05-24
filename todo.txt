@@ -1,9 +1,6 @@
 
 X. Support queries / filters
 
-X. Support for recurring options in Task
-X. Support for email and SMS delivery in Note
-
 X. Add support for reports
 X. Add support for pipelines
 X. Add support for business details / preferences
@@ -16,5 +13,4 @@ X. Integration tests
 
 X. Support for synchronization (get what has changed from a timestamp)
 
-X. Create sphinx documentation
 
